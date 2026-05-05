@@ -12,8 +12,9 @@ python-multipart==0.0.9
 lark-oapi==1.3.0
 
 # ── Audio Capture ─────────────────────────────
-sounddevice==0.4.6
-soundfile==0.12.1
+# pyaudiowpatch: PyAudio fork with WASAPI loopback support for Windows
+# This is what allows capturing system audio (all meeting participants)
+pyaudiowpatch==0.2.12.8
 numpy==1.26.4
 
 # ── AI — Transcription ────────────────────────
