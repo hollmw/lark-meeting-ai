@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────
+# LARK MEETING AI — Example Configuration
+# Copy this file to config.yaml and fill in your values
+# cp config.example.yaml config.yaml
+# ─────────────────────────────────────────────
+
+# ── Lark App Credentials ──────────────────────
+# Get these from open.larksuite.com → Developer Console → your app
+lark:
+  app_id: "YOUR_LARK_APP_ID"
+  app_secret: "YOUR_LARK_APP_SECRET"
+  verification_token: "YOUR_VERIFICATION_TOKEN"   # Events & Callbacks → Encryption Strategy
+  encrypt_key: "YOUR_ENCRYPT_KEY"                 # Events & Callbacks → Encryption Strategy
+
+# ── Backend Mode ─────────────────────────────
+# Options: "local" | "hosted"
+backend:
+  mode: "local"
+  hosted_url: "https://your-server.com/api"
+  hosted_api_key: "YOUR_API_KEY"
+
+# ── AI Models (local mode) ───────────────────
+models:
+  whisper:
+    size: "large-v3"
+    language: "auto"
+    device: "cpu"
+
+  pyannote:
+    hf_token: "YOUR_HUGGINGFACE_TOKEN"
+    num_speakers: "auto"
+
+  llm:
+    provider: "ollama"
+    model: "mistral"
+    ollama_url: "http://localhost:11434"
+
+# ── Audio Capture ─────────────────────────────
+audio:
+  sample_rate: 16000
+  channels: 1
+  format: "wav"
+  output_dir: "./recordings"
+
+# ── Output ───────────────────────────────────
+output:
+  post_to_chat: true
+  post_to_doc: true
+  language: "auto"
+  sections:
+    - summary
+    - action_items
+    - decisions
+    - transcript

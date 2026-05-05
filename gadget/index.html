@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meeting AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f7f8fa;
+      color: #1a1a1a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .logo { font-size: 32px; margin-bottom: 8px; }
+    h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .tagline { font-size: 12px; color: #888; margin-bottom: 28px; }
+
+    /* Status indicator */
+    .status-ring {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 3px solid #e5e5e5;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .status-ring.recording {
+      border-color: #ef4444;
+      animation: pulse 1.5s infinite;
+    }
+    .status-ring.processing {
+      border-color: #f59e0b;
+      animation: spin 1.5s linear infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+      50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .status-icon { font-size: 28px; }
+
+    .status-text { font-size: 13px; color: #555; margin-bottom: 24px; font-weight: 500; }
+
+    /* Timer */
+    .timer { font-size: 22px; font-weight: 700; color: #ef4444; margin-bottom: 24px; display: none; }
+    .timer.visible { display: block; }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+    .btn-start { background: #4F6EF7; color: white; }
+    .btn-start:hover { background: #3a56c9; }
+    .btn-stop { background: #ef4444; color: white; display: none; }
+    .btn-stop:hover { background: #dc2626; }
+    .btn-stop.visible { display: block; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Consent overlay */
+    .consent-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .consent-overlay.visible { display: flex; }
+    .consent-card {
+      background: white; border-radius: 16px;
+      padding: 28px; max-width: 320px; width: 90%;
+      text-align: left;
+    }
+    .consent-card h2 { font-size: 16px; margin-bottom: 12px; }
+    .consent-card p { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 20px; }
+    .consent-actions { display: flex; gap: 8px; }
+    .btn-confirm { flex: 1; background: #4F6EF7; color: white; padding: 12px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-cancel { flex: 1; background: #f3f4f6; color: #555; padding: 12px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* Footer */
+    .footer { font-size: 11px; color: #bbb; margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- Consent Overlay -->
+  <div class="consent-overlay" id="consentOverlay">
+    <div class="consent-card">
+      <h2>🎙️ Start Recording</h2>
+      <p>By continuing, you confirm that <strong>all meeting participants have been informed and consent</strong> to being recorded and transcribed.<br><br>Audio is processed locally and never stored on external servers.</p>
+      <div class="consent-actions">
+        <button class="btn-confirm" onclick="confirmConsent()">Confirm & Start</button>
+        <button class="btn-cancel" onclick="cancelConsent()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="card">
+    <div class="logo">🎙️</div>
+    <h1>Meeting AI</h1>
+    <p class="tagline">Cantonese · English · Any meeting</p>
+
+    <div class="status-ring" id="statusRing">
+      <span class="status-icon" id="statusIcon">⏺</span>
+    </div>
+
+    <div class="status-text" id="statusText">Ready to record</div>
+    <div class="timer" id="timer">00:00</div>
+
+    <button class="btn btn-start" id="startBtn" onclick="handleStart()">Start Recording</button>
+    <button class="btn btn-stop" id="stopBtn" onclick="handleStop()">Stop & Generate Notes</button>
+
+    <div class="footer">Works on Lark · Zoom · Google Meet · Teams</div>
+  </div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let state = 'idle';       // idle | recording | processing
+  let timerInterval = null;
+  let secondsElapsed = 0;
+  const BACKEND_URL = 'http://localhost:8000';  // local backend server
+
+  // ── UI refs ────────────────────────────────────────────────────────────────
+  const statusRing = document.getElementById('statusRing');
+  const statusIcon = document.getElementById('statusIcon');
+  const statusText = document.getElementById('statusText');
+  const timer = document.getElementById('timer');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const consentOverlay = document.getElementById('consentOverlay');
+
+  // ── Start flow ─────────────────────────────────────────────────────────────
+  function handleStart() {
+    consentOverlay.classList.add('visible');
+  }
+
+  function cancelConsent() {
+    consentOverlay.classList.remove('visible');
+  }
+
+  async function confirmConsent() {
+    consentOverlay.classList.remove('visible');
+    startRecording();
+  }
+
+  // ── Recording ──────────────────────────────────────────────────────────────
+  async function startRecording() {
+    state = 'recording';
+    updateUI();
+
+    // Tell backend to start capturing audio
+    try {
+      await fetch(`${BACKEND_URL}/recording/start`, { method: 'POST' });
+    } catch (e) {
+      console.error('Could not reach backend:', e);
+      setStatus('idle', '⚠️ Could not connect to backend');
+      return;
+    }
+
+    // Start timer
+    secondsElapsed = 0;
+    timerInterval = setInterval(() => {
+      secondsElapsed++;
+      timer.textContent = formatTime(secondsElapsed);
+    }, 1000);
+  }
+
+  async function handleStop() {
+    clearInterval(timerInterval);
+    state = 'processing';
+    updateUI();
+
+    // Tell backend to stop and process
+    try {
+      await fetch(`${BACKEND_URL}/recording/stop`, { method: 'POST' });
+    } catch (e) {
+      console.error('Could not reach backend:', e);
+    }
+
+    // Poll for completion
+    pollForNotes();
+  }
+
+  // ── Poll backend for finished notes ────────────────────────────────────────
+  async function pollForNotes() {
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/recording/status`);
+        const data = await res.json();
+        if (data.status === 'done') {
+          clearInterval(poll);
+          state = 'idle';
+          updateUI();
+          setStatus('idle', '✅ Notes sent to Lark!');
+        }
+      } catch (e) {
+        // Backend still processing — keep polling
+      }
+    }, 3000);
+  }
+
+  // ── UI updates ─────────────────────────────────────────────────────────────
+  function updateUI() {
+    statusRing.className = 'status-ring';
+    timer.className = 'timer';
+    stopBtn.className = 'btn btn-stop';
+
+    if (state === 'recording') {
+      statusRing.classList.add('recording');
+      statusIcon.textContent = '⏺';
+      statusText.textContent = 'Recording in progress...';
+      timer.classList.add('visible');
+      startBtn.style.display = 'none';
+      stopBtn.classList.add('visible');
+    } else if (state === 'processing') {
+      statusRing.classList.add('processing');
+      statusIcon.textContent = '⚙️';
+      statusText.textContent = 'Generating meeting notes...';
+      stopBtn.classList.remove('visible');
+      startBtn.style.display = 'none';
+    } else {
+      statusIcon.textContent = '⏺';
+      startBtn.style.display = 'block';
+    }
+  }
+
+  function setStatus(newState, text) {
+    state = newState;
+    statusText.textContent = text;
+    updateUI();
+  }
+
+  function formatTime(secs) {
+    const m = String(Math.floor(secs / 60)).padStart(2, '0');
+    const s = String(secs % 60).padStart(2, '0');
+    return `${m}:${s}`;
+  }
+</script>
+</body>
+</html>
