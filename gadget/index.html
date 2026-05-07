@@ -236,7 +236,7 @@
   // ── State ──────────────────────────────────────────────────────────────────
   let state = 'idle';
   let timerInterval = null;
-  let secondsElapsed = 0;
+  let recordingStartTime = null;  // wall-clock ms when recording began
   let pollInterval = null;
   const BACKEND_URL = 'http://localhost:8000';
 
@@ -286,11 +286,11 @@
       return;
     }
 
-    secondsElapsed = 0;
+    recordingStartTime = Date.now();
     timerInterval = setInterval(() => {
-      secondsElapsed++;
-      timerEl.textContent = formatTime(secondsElapsed);
-    }, 1000);
+      const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+      timerEl.textContent = formatTime(elapsed);
+    }, 500);  // poll every 500ms — accurate even when tab is throttled
   }
 
   async function handleStop() {
