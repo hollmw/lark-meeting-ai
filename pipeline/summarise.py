@@ -51,16 +51,19 @@ def build_prompt(transcript: str, language: str = "auto") -> str:
 
 {lang_instruction}
 
-Return ONLY a JSON object in this exact format:
+Return ONLY a JSON object in this exact format.
+IMPORTANT: action_items and decisions must be plain strings — never return objects or dicts.
+Extract ALL action items mentioned, even if there are 4 or 5.
 {{
     "summary": "2-4 sentence overview of what was discussed",
     "action_items": [
-        "Action item 1 (assignee if mentioned)",
-        "Action item 2"
+        "First action item with owner name in brackets if mentioned",
+        "Second action item",
+        "Third action item — include every task that was agreed upon"
     ],
     "decisions": [
-        "Decision 1",
-        "Decision 2"
+        "First decision made",
+        "Second decision made"
     ],
     "key_topics": ["topic1", "topic2"],
     "speakers": ["SPEAKER_00", "SPEAKER_01"],
@@ -146,11 +149,14 @@ def _parse_json_response(raw: str) -> dict:
         raw = raw.split("```")[1].split("```")[0].strip()
 
     try:
-        return json.loads(raw)
+        result = json.loads(raw)
+        # Flatten any action_items / decisions that came back as dicts
+        result["action_items"] = _flatten_list(result.get("action_items", []))
+        result["decisions"]    = _flatten_list(result.get("decisions", []))
+        return result
     except json.JSONDecodeError as e:
         print(f"[LLM] JSON parse error: {e}")
         print(f"[LLM] Raw response: {raw[:200]}")
-        # Return a safe fallback
         return {
             "summary": raw[:500] if raw else "Could not generate summary",
             "action_items": [],
@@ -159,3 +165,32 @@ def _parse_json_response(raw: str) -> dict:
             "speakers": [],
             "sentiment": "neutral",
         }
+
+
+def _flatten_list(items: list) -> list:
+    """
+    Ensures every item in a list is a plain string.
+    Handles cases where the LLM returns dicts like
+    {'Action item': 'foo', 'assignee': 'bar'} instead of 'foo (bar)'.
+    """
+    result = []
+    for item in items:
+        if isinstance(item, str):
+            result.append(item)
+        elif isinstance(item, dict):
+            # Try common keys, fall back to joining all values
+            text = (
+                item.get("Action item")
+                or item.get("action_item")
+                or item.get("action")
+                or item.get("text")
+                or item.get("description")
+                or ", ".join(str(v) for v in item.values() if v)
+            )
+            assignee = item.get("assignee") or item.get("owner") or item.get("assigned_to")
+            if assignee:
+                text = f"{text} ({assignee})"
+            result.append(str(text))
+        else:
+            result.append(str(item))
+    return result

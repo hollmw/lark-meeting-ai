@@ -21,18 +21,22 @@ from pipeline.summarise import summarise
 from lark_app import bot
 
 
-async def run(audio_path: str, chat_id: str = None, user_id: str = None) -> dict:
+async def run(audio_path: str, chat_id: str = None, user_id: str = None, open_id: str = None) -> dict:
     """
     Runs the full pipeline on a recorded audio file.
 
     Args:
         audio_path: Path to the WAV recording
-        chat_id:    Lark chat ID to post notes to (optional)
-        user_id:    Lark user ID to DM notes to (optional)
+        chat_id:    Lark group chat ID to post notes to (receive_id_type=chat_id)
+        open_id:    Lark user open_id to DM notes to  (receive_id_type=open_id)
+        user_id:    Legacy alias for open_id
 
     Returns:
         Full notes dict with transcript and summary
     """
+    # Normalise: user_id is treated as open_id for backwards compatibility
+    if user_id and not open_id:
+        open_id = user_id
     print(f"\n[Pipeline] Starting — {audio_path}")
     print("[Pipeline] ─────────────────────────────────")
 
@@ -75,15 +79,19 @@ async def run(audio_path: str, chat_id: str = None, user_id: str = None) -> dict
     )
 
     print("[Pipeline] ✅ Notes generated")
+    print("[Pipeline] ─────────────────────────────────")
+    print("[Pipeline] TRANSCRIPT:")
+    print(formatted_transcript if formatted_transcript.strip() else "(empty — no speech detected)")
     print("[Pipeline] ─────────────────────────────────\n")
 
     # ── Post to Lark ──────────────────────────────────────────────────────────
-    if chat_id or user_id:
+    if chat_id or open_id:
         try:
             print("[Pipeline] Posting notes to Lark...")
             await bot.post_meeting_notes(
-                chat_id=chat_id or user_id,
                 notes=notes,
+                chat_id=chat_id,
+                open_id=open_id,
             )
             print("[Pipeline] ✅ Notes posted to Lark")
         except Exception as e:

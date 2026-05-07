@@ -113,18 +113,21 @@ async def send_consent_prompt(chat_id: str, user_id: str) -> dict:
 
 # ── Post meeting notes ─────────────────────────────────────────────────────────
 
-async def post_meeting_notes(chat_id: str, notes: dict) -> dict:
+async def post_meeting_notes(
+    notes: dict,
+    chat_id: str = None,
+    open_id: str = None,
+) -> dict:
     """
-    Posts the finished meeting notes as a rich card to the Lark chat.
-    Notes dict expected format:
-      {
-        "summary": "...",
-        "action_items": ["...", "..."],
-        "decisions": ["...", "..."],
-        "speakers": ["Speaker 1", "Speaker 2"],
-        "duration": "45 mins"
-      }
+    Posts the finished meeting notes as a rich card.
+
+    Provide either:
+      chat_id  — post to a group chat  (receive_id_type = chat_id)
+      open_id  — DM to a specific user (receive_id_type = open_id)
     """
+    if not chat_id and not open_id:
+        raise ValueError("Must provide chat_id or open_id")
+
     headers = await get_auth_headers()
 
     # Build action items list
@@ -174,15 +177,23 @@ async def post_meeting_notes(chat_id: str, notes: dict) -> dict:
     }
 
     import json
+
+    if open_id:
+        receive_id = open_id
+        receive_id_type = "open_id"
+    else:
+        receive_id = chat_id
+        receive_id_type = "chat_id"
+
     payload = {
-        "receive_id": chat_id,
+        "receive_id": receive_id,
         "msg_type": "interactive",
         "content": json.dumps(card_content),
     }
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            f"{LARK_API_BASE}/im/v1/messages?receive_id_type=chat_id",
+            f"{LARK_API_BASE}/im/v1/messages?receive_id_type={receive_id_type}",
             headers=headers,
             json=payload,
         )

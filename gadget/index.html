@@ -11,37 +11,36 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #f7f8fa;
       color: #1a1a1a;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 24px;
+      justify-content: flex-start;
+      padding: 24px 16px;
     }
 
     .card {
       background: white;
       border-radius: 16px;
-      padding: 32px 28px;
+      padding: 28px 24px;
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
       box-shadow: 0 2px 16px rgba(0,0,0,0.08);
       text-align: center;
     }
 
-    .logo { font-size: 32px; margin-bottom: 8px; }
-    h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-    .tagline { font-size: 12px; color: #888; margin-bottom: 28px; }
+    .logo { font-size: 28px; margin-bottom: 6px; }
+    h1 { font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+    .tagline { font-size: 11px; color: #888; margin-bottom: 22px; }
 
-    /* Status indicator */
+    /* Status ring */
     .status-ring {
-      width: 80px; height: 80px;
+      width: 72px; height: 72px;
       border-radius: 50%;
       border: 3px solid #e5e5e5;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px;
+      margin: 0 auto 16px;
       transition: all 0.3s ease;
-      position: relative;
     }
     .status-ring.recording {
       border-color: #ef4444;
@@ -51,39 +50,62 @@
       border-color: #f59e0b;
       animation: spin 1.5s linear infinite;
     }
+    .status-ring.done { border-color: #22c55e; }
+    .status-ring.error { border-color: #ef4444; }
     @keyframes pulse {
       0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
-      50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+      50%       { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
     }
     @keyframes spin {
       from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      to   { transform: rotate(360deg); }
     }
-    .status-icon { font-size: 28px; }
-
-    .status-text { font-size: 13px; color: #555; margin-bottom: 24px; font-weight: 500; }
+    .status-icon { font-size: 26px; }
+    .status-text { font-size: 13px; color: #555; margin-bottom: 18px; font-weight: 500; }
 
     /* Timer */
-    .timer { font-size: 22px; font-weight: 700; color: #ef4444; margin-bottom: 24px; display: none; }
+    .timer { font-size: 20px; font-weight: 700; color: #ef4444; margin-bottom: 18px; display: none; }
     .timer.visible { display: block; }
+
+    /* Open ID input */
+    .input-group {
+      text-align: left;
+      margin-bottom: 14px;
+    }
+    .input-group label {
+      font-size: 11px; font-weight: 600; color: #888;
+      display: block; margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .input-group input {
+      width: 100%; padding: 10px 12px;
+      border: 1.5px solid #e5e5e5; border-radius: 8px;
+      font-size: 13px; color: #1a1a1a;
+      outline: none; transition: border-color 0.2s;
+    }
+    .input-group input:focus { border-color: #4F6EF7; }
+    .input-hint { font-size: 11px; color: #aaa; margin-top: 3px; }
 
     /* Buttons */
     .btn {
       width: 100%;
-      padding: 14px;
+      padding: 13px;
       border-radius: 10px;
       border: none;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .btn-start { background: #4F6EF7; color: white; }
     .btn-start:hover { background: #3a56c9; }
     .btn-stop { background: #ef4444; color: white; display: none; }
     .btn-stop:hover { background: #dc2626; }
     .btn-stop.visible { display: block; }
+    .btn-new { background: #f3f4f6; color: #444; display: none; }
+    .btn-new:hover { background: #e5e7eb; }
+    .btn-new.visible { display: block; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Consent overlay */
@@ -97,17 +119,50 @@
     .consent-overlay.visible { display: flex; }
     .consent-card {
       background: white; border-radius: 16px;
-      padding: 28px; max-width: 320px; width: 90%;
+      padding: 24px; max-width: 320px; width: 90%;
       text-align: left;
     }
-    .consent-card h2 { font-size: 16px; margin-bottom: 12px; }
-    .consent-card p { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 20px; }
+    .consent-card h2 { font-size: 15px; margin-bottom: 10px; }
+    .consent-card p { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 18px; }
     .consent-actions { display: flex; gap: 8px; }
-    .btn-confirm { flex: 1; background: #4F6EF7; color: white; padding: 12px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .btn-cancel { flex: 1; background: #f3f4f6; color: #555; padding: 12px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-confirm { flex: 1; background: #4F6EF7; color: white; padding: 11px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-cancel  { flex: 1; background: #f3f4f6; color: #555; padding: 11px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* Notes preview card */
+    .notes-card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px 20px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      margin-top: 16px;
+      text-align: left;
+      display: none;
+    }
+    .notes-card.visible { display: block; }
+    .notes-card h2 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #1a1a1a; }
+    .notes-section { margin-bottom: 14px; }
+    .notes-section-title {
+      font-size: 10px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 5px;
+    }
+    .notes-section-body { font-size: 13px; color: #333; line-height: 1.55; }
+    .notes-section-body ul { padding-left: 18px; margin: 0; }
+    .notes-section-body li { margin-bottom: 3px; }
+    .meta-row {
+      display: flex; gap: 16px;
+      font-size: 12px; color: #888;
+      margin-bottom: 12px; padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .meta-row span strong { color: #555; }
+    .no-items { color: #bbb; font-style: italic; font-size: 13px; }
+    hr.divider { border: none; border-top: 1px solid #f0f0f0; margin: 10px 0; }
 
     /* Footer */
-    .footer { font-size: 11px; color: #bbb; margin-top: 16px; }
+    .footer { font-size: 10px; color: #ccc; margin-top: 14px; text-align: center; }
   </style>
 </head>
 <body>
@@ -133,31 +188,70 @@
     <div class="status-ring" id="statusRing">
       <span class="status-icon" id="statusIcon">⏺</span>
     </div>
-
     <div class="status-text" id="statusText">Ready to record</div>
     <div class="timer" id="timer">00:00</div>
 
-    <button class="btn btn-start" id="startBtn" onclick="handleStart()">Start Recording</button>
-    <button class="btn btn-stop" id="stopBtn" onclick="handleStop()">Stop & Generate Notes</button>
+    <!-- Lark User ID input (shown only when idle) -->
+    <div class="input-group" id="openIdGroup">
+      <label>Your Lark Open ID (optional)</label>
+      <input type="text" id="openIdInput" placeholder="ou_xxxxxxxxxxxxxxxxxxxxxxxx" />
+      <div class="input-hint">If set, notes will be sent to you via Lark DM</div>
+    </div>
+
+    <button class="btn btn-start" id="startBtn" onclick="handleStart()">▶ Start Recording</button>
+    <button class="btn btn-stop" id="stopBtn" onclick="handleStop()">⏹ Stop &amp; Generate Notes</button>
+    <button class="btn btn-new" id="newBtn" onclick="handleNewMeeting()">+ New Meeting</button>
 
     <div class="footer">Works on Lark · Zoom · Google Meet · Teams</div>
   </div>
 
+  <!-- Notes Preview (shown after processing) -->
+  <div class="notes-card" id="notesCard">
+    <h2>📋 Meeting Notes</h2>
+    <div class="meta-row" id="notesMeta"></div>
+    <div class="notes-section">
+      <div class="notes-section-title">📝 Summary</div>
+      <div class="notes-section-body" id="notesSummary"></div>
+    </div>
+    <hr class="divider">
+    <div class="notes-section">
+      <div class="notes-section-title">✅ Action Items</div>
+      <div class="notes-section-body" id="notesActions"></div>
+    </div>
+    <hr class="divider">
+    <div class="notes-section">
+      <div class="notes-section-title">🔑 Key Decisions</div>
+      <div class="notes-section-body" id="notesDecisions"></div>
+    </div>
+    <hr class="divider">
+    <div class="notes-section">
+      <div class="notes-section-title" style="cursor:pointer" onclick="toggleTranscript()">
+        📄 Full Transcript <span id="transcriptToggle">▼ show</span>
+      </div>
+      <div class="notes-section-body" id="notesTranscript" style="display:none;white-space:pre-wrap;font-size:12px;color:#555;max-height:300px;overflow-y:auto;background:#f9f9f9;padding:10px;border-radius:8px;margin-top:6px;"></div>
+    </div>
+  </div>
+
 <script>
   // ── State ──────────────────────────────────────────────────────────────────
-  let state = 'idle';       // idle | recording | processing
+  let state = 'idle';
   let timerInterval = null;
   let secondsElapsed = 0;
-  const BACKEND_URL = 'http://localhost:8000';  // local backend server
+  let pollInterval = null;
+  const BACKEND_URL = 'http://localhost:8000';
 
   // ── UI refs ────────────────────────────────────────────────────────────────
-  const statusRing = document.getElementById('statusRing');
-  const statusIcon = document.getElementById('statusIcon');
-  const statusText = document.getElementById('statusText');
-  const timer = document.getElementById('timer');
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const consentOverlay = document.getElementById('consentOverlay');
+  const statusRing    = document.getElementById('statusRing');
+  const statusIcon    = document.getElementById('statusIcon');
+  const statusText    = document.getElementById('statusText');
+  const timerEl       = document.getElementById('timer');
+  const startBtn      = document.getElementById('startBtn');
+  const stopBtn       = document.getElementById('stopBtn');
+  const newBtn        = document.getElementById('newBtn');
+  const consentOverlay= document.getElementById('consentOverlay');
+  const openIdGroup   = document.getElementById('openIdGroup');
+  const openIdInput   = document.getElementById('openIdInput');
+  const notesCard     = document.getElementById('notesCard');
 
   // ── Start flow ─────────────────────────────────────────────────────────────
   function handleStart() {
@@ -170,100 +264,173 @@
 
   async function confirmConsent() {
     consentOverlay.classList.remove('visible');
-    startRecording();
+    await startRecording();
   }
 
   // ── Recording ──────────────────────────────────────────────────────────────
   async function startRecording() {
-    state = 'recording';
-    updateUI();
+    const openId = openIdInput.value.trim();
+    setState('recording');
 
-    // Tell backend to start capturing audio
+    const url = openId
+      ? `${BACKEND_URL}/recording/start?open_id=${encodeURIComponent(openId)}`
+      : `${BACKEND_URL}/recording/start`;
+
     try {
-      await fetch(`${BACKEND_URL}/recording/start`, { method: 'POST' });
+      const res = await fetch(url, { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (e) {
       console.error('Could not reach backend:', e);
-      setStatus('idle', '⚠️ Could not connect to backend');
+      setState('idle');
+      statusText.textContent = '⚠️ Could not connect to backend — is the server running?';
       return;
     }
 
-    // Start timer
     secondsElapsed = 0;
     timerInterval = setInterval(() => {
       secondsElapsed++;
-      timer.textContent = formatTime(secondsElapsed);
+      timerEl.textContent = formatTime(secondsElapsed);
     }, 1000);
   }
 
   async function handleStop() {
     clearInterval(timerInterval);
-    state = 'processing';
-    updateUI();
+    setState('processing');
 
-    // Tell backend to stop and process
     try {
       await fetch(`${BACKEND_URL}/recording/stop`, { method: 'POST' });
     } catch (e) {
       console.error('Could not reach backend:', e);
     }
 
-    // Poll for completion
     pollForNotes();
   }
 
   // ── Poll backend for finished notes ────────────────────────────────────────
-  async function pollForNotes() {
-    const poll = setInterval(async () => {
+  function pollForNotes() {
+    pollInterval = setInterval(async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/recording/status`);
         const data = await res.json();
+
         if (data.status === 'done') {
-          clearInterval(poll);
-          state = 'idle';
-          updateUI();
-          setStatus('idle', '✅ Notes sent to Lark!');
+          clearInterval(pollInterval);
+          setState('done');
+          statusText.textContent = '✅ Notes ready!';
+          if (data.notes) showNotes(data.notes);
+        } else if (data.status === 'error') {
+          clearInterval(pollInterval);
+          setState('error');
+          statusText.textContent = `⚠️ Error: ${data.error || 'Pipeline failed'}`;
         }
       } catch (e) {
-        // Backend still processing — keep polling
+        // backend still busy — keep polling
       }
     }, 3000);
   }
 
-  // ── UI updates ─────────────────────────────────────────────────────────────
-  function updateUI() {
-    statusRing.className = 'status-ring';
-    timer.className = 'timer';
-    stopBtn.className = 'btn btn-stop';
-
-    if (state === 'recording') {
-      statusRing.classList.add('recording');
-      statusIcon.textContent = '⏺';
-      statusText.textContent = 'Recording in progress...';
-      timer.classList.add('visible');
-      startBtn.style.display = 'none';
-      stopBtn.classList.add('visible');
-    } else if (state === 'processing') {
-      statusRing.classList.add('processing');
-      statusIcon.textContent = '⚙️';
-      statusText.textContent = 'Generating meeting notes...';
-      stopBtn.classList.remove('visible');
-      startBtn.style.display = 'none';
+  // ── Transcript toggle ──────────────────────────────────────────────────────
+  function toggleTranscript() {
+    const el = document.getElementById('notesTranscript');
+    const toggle = document.getElementById('transcriptToggle');
+    if (el.style.display === 'none') {
+      el.style.display = 'block';
+      toggle.textContent = '▲ hide';
     } else {
-      statusIcon.textContent = '⏺';
-      startBtn.style.display = 'block';
+      el.style.display = 'none';
+      toggle.textContent = '▼ show';
     }
   }
 
-  function setStatus(newState, text) {
-    state = newState;
-    statusText.textContent = text;
-    updateUI();
+  // ── Show notes in preview card ─────────────────────────────────────────────
+  function showNotes(notes) {
+    // Meta row
+    const parts = [];
+    if (notes.duration) parts.push(`<span><strong>Duration:</strong> ${notes.duration}</span>`);
+    if (notes.language) parts.push(`<span><strong>Language:</strong> ${notes.language}</span>`);
+    document.getElementById('notesMeta').innerHTML = parts.join('');
+
+    // Summary
+    document.getElementById('notesSummary').textContent = notes.summary || '—';
+
+    // Action items
+    const actions = notes.action_items || [];
+    document.getElementById('notesActions').innerHTML = actions.length
+      ? `<ul>${actions.map(a => `<li>${escHtml(a)}</li>`).join('')}</ul>`
+      : '<span class="no-items">None identified</span>';
+
+    // Decisions
+    const decisions = notes.decisions || [];
+    document.getElementById('notesDecisions').innerHTML = decisions.length
+      ? `<ul>${decisions.map(d => `<li>${escHtml(d)}</li>`).join('')}</ul>`
+      : '<span class="no-items">None identified</span>';
+
+    // Full transcript
+    const transcript = notes.transcript || '';
+    const transcriptEl = document.getElementById('notesTranscript');
+    if (transcript.trim()) {
+      transcriptEl.textContent = transcript;
+    } else {
+      transcriptEl.textContent = '(no speech detected — check system audio is capturing correctly)';
+    }
+
+    notesCard.classList.add('visible');
   }
 
+  // ── New meeting ────────────────────────────────────────────────────────────
+  function handleNewMeeting() {
+    notesCard.classList.remove('visible');
+    setState('idle');
+  }
+
+  // ── UI state machine ───────────────────────────────────────────────────────
+  function setState(s) {
+    state = s;
+
+    // Ring
+    statusRing.className = 'status-ring';
+    if (s === 'recording') statusRing.classList.add('recording');
+    if (s === 'processing') statusRing.classList.add('processing');
+    if (s === 'done')  statusRing.classList.add('done');
+    if (s === 'error') statusRing.classList.add('error');
+
+    // Icon
+    const icons = { idle: '⏺', recording: '⏺', processing: '⚙️', done: '✅', error: '⚠️' };
+    statusIcon.textContent = icons[s] || '⏺';
+
+    // Status text
+    const texts = {
+      idle: 'Ready to record',
+      recording: 'Recording in progress...',
+      processing: 'Generating meeting notes...',
+      done: '✅ Notes ready!',
+      error: 'Something went wrong',
+    };
+    statusText.textContent = texts[s] || '';
+
+    // Timer
+    timerEl.className = 'timer' + (s === 'recording' ? ' visible' : '');
+
+    // Buttons / input
+    const isIdle = s === 'idle';
+    const isRecording = s === 'recording';
+    const isDoneOrError = s === 'done' || s === 'error';
+
+    startBtn.style.display = isIdle ? 'block' : 'none';
+    stopBtn.className = 'btn btn-stop' + (isRecording ? ' visible' : '');
+    newBtn.className  = 'btn btn-new'  + (isDoneOrError ? ' visible' : '');
+    openIdGroup.style.display = isIdle ? 'block' : 'none';
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
   function formatTime(secs) {
     const m = String(Math.floor(secs / 60)).padStart(2, '0');
     const s = String(secs % 60).padStart(2, '0');
     return `${m}:${s}`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 </script>
 </body>

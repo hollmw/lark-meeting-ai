@@ -13,8 +13,13 @@ Output is a merged transcript where every segment has:
 - language
 """
 
+import warnings
 import yaml
 from pathlib import Path
+
+# Suppress noisy torchcodec/pyannote warnings — these are non-fatal
+warnings.filterwarnings("ignore", message="torchcodec is not installed correctly")
+warnings.filterwarnings("ignore", category=UserWarning, module="pyannote")
 
 
 # ── Load config ───────────────────────────────────────────────────────────────
@@ -51,7 +56,7 @@ def get_pipeline():
         print("[Pyannote] First load downloads model weights — may take a few minutes")
         _pipeline = Pipeline.from_pretrained(
             "pyannote/speaker-diarization-3.1",
-            use_auth_token=hf_token,
+            token=hf_token,
         )
         print("[Pyannote] Model loaded ✅")
     return _pipeline
