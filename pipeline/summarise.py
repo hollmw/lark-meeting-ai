@@ -32,7 +32,7 @@ BACKEND_MODE = CONFIG.get("backend", {}).get("mode", "local")
 SYSTEM_PROMPT = """You are a professional meeting notes assistant.
 You support multilingual meetings including English and Cantonese.
 Your job is to produce clear, structured meeting notes from a transcript.
-Always respond in valid JSON only — no extra text outside the JSON."""
+Always respond in valid JSON only — no extra text, no markdown, no // comments, no trailing commas."""
 
 def build_prompt(transcript: str, language: str = "auto") -> str:
     """
@@ -147,6 +147,12 @@ def _parse_json_response(raw: str) -> dict:
         raw = raw.split("```json")[1].split("```")[0].strip()
     elif "```" in raw:
         raw = raw.split("```")[1].split("```")[0].strip()
+
+    # Strip // line comments (phi3 sometimes adds these — invalid JSON)
+    import re
+    raw = re.sub(r'//[^\n"]*', '', raw)
+    # Strip trailing commas before } or ] (another phi3 quirk)
+    raw = re.sub(r',\s*([\]}])', r'\1', raw)
 
     try:
         result = json.loads(raw)
