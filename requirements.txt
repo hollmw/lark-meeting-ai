@@ -19,7 +19,8 @@ numpy==1.26.4
 
 # ── AI — Transcription ────────────────────────
 openai-whisper==20231117
-torch==2.2.2                  # required by Whisper + Pyannote
+# torch must be installed separately with CUDA support BEFORE this file:
+#   py -3.11 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # ── AI — Speaker Diarization ─────────────────
 pyannote.audio==3.1.1
