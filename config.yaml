@@ -1,0 +1,53 @@
+# ─────────────────────────────────────────────
+# LARK MEETING AI — Configuration
+# ─────────────────────────────────────────────
+
+# ── Lark App Credentials ──────────────────────
+lark:
+  app_id: "cli_a97318c1dcb85e18"
+  app_secret: "XMjVNKWegYnDxfjsIT6E2bUHI7KGvQSq"
+  verification_token: "QIVVPj1fZdHJwoTTfT3oibjRzQslabyG"
+  encrypt_key: "Qbi6fEOj7KYRFkLCsJcPfcAgOx17bqgh"
+
+# ── Backend Mode ─────────────────────────────
+# Options: "local" | "hosted"
+# Switch to "hosted" when you want to move AI
+# processing to your server — nothing else changes.
+backend:
+  mode: "local"
+  hosted_url: "https://your-server.com/api"   # only used when mode = hosted
+  hosted_api_key: "YOUR_API_KEY"              # only used when mode = hosted
+
+# ── AI Models (local mode) ───────────────────
+models:
+  whisper:
+    size: "medium"            # tiny | base | small | medium | large-v3
+    language: "en"          # auto-detect (handles Cantonese + English)
+    device: "cpu"             # cpu | cuda (use cuda if GPU available)
+
+  pyannote:
+    hf_token: "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"        # required to download model weights
+    num_speakers: "auto"      # auto | 2 | 3 | 4 ...
+
+  llm:
+    provider: "ollama"        # ollama | openai | claude
+    model: "phi3"             # phi3 = smaller/faster, mistral = better quality
+    ollama_url: "http://localhost:11434"
+
+# ── Audio Capture ─────────────────────────────
+audio:
+  sample_rate: 16000
+  channels: 1
+  format: "wav"
+  output_dir: "./recordings"  # where audio files are saved temporarily
+
+# ── Output ───────────────────────────────────
+output:
+  post_to_chat: true          # post notes to Lark chat after meeting
+  post_to_doc: true           # also save as a Lark Doc
+  language: "auto"            # auto | en | zh-HK (notes output language)
+  sections:
+    - summary
+    - action_items
+    - decisions
+    - transcript

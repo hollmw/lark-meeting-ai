@@ -10,9 +10,12 @@ FastAPI server that handles:
 
 import asyncio
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from lark_app.webhook import handle_webhook
+from lark_app.docs import insert_meeting_notes, extract_doc_token
 from pipeline.audio_capture import recorder
 from pipeline.run import run as pipeline_run
 
@@ -119,6 +122,35 @@ async def get_status():
     if recording_state["status"] == "error":
         resp["error"] = recording_state.get("error", "Unknown error")
     return resp
+
+
+# ── Insert notes into Lark Doc ────────────────────────────────────────────────
+
+class DocInsertRequest(BaseModel):
+    doc_url: str   # Lark Doc URL or raw doc token
+
+@app.post("/docs/insert")
+async def insert_to_doc(req: DocInsertRequest):
+    """
+    Inserts the last generated meeting notes into a Lark Doc.
+    Accepts a Lark Doc URL (https://xxx.larksuite.com/docx/TOKEN) or raw token.
+    """
+    if recording_state["status"] != "done" or not recording_state["notes"]:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No notes available — run a recording first"}
+        )
+
+    doc_token = extract_doc_token(req.doc_url)
+    if not doc_token:
+        return JSONResponse(status_code=400, content={"error": "Invalid doc URL or token"})
+
+    try:
+        result = await insert_meeting_notes(doc_token, recording_state["notes"])
+        return {"status": "ok", "doc_token": doc_token, "result": result}
+    except Exception as e:
+        print(f"[Docs] Insert failed: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 # ── Health check ───────────────────────────────────────────────────────────────
