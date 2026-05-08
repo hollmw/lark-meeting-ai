@@ -1,0 +1,30 @@
+# ── Secrets ───────────────────────────────────
+config.yaml
+
+# ── Python ────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# ── Recordings (audio files) ──────────────────
+recordings/
+*.wav
+*.mp3
+*.m4a
+
+# ── OS ────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
