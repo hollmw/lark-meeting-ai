@@ -110,7 +110,7 @@ def _summarise_local(transcript: str, language: str) -> dict:
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ],
-        options={"temperature": 0.3},  # lower temp = more consistent output
+        options={"temperature": 0.3, "num_gpu": 0},  # CPU only — avoids CUDA conflict with Whisper
     )
 
     raw = response["message"]["content"].strip()

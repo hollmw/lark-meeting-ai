@@ -287,10 +287,12 @@ class AudioRecorder:
                 self._mic_rate, SAMPLE_RATE,
             )
 
-            # Match lengths (trim to shorter)
-            min_len = min(len(sys_audio), len(mic_audio))
-            sys_audio = sys_audio[:min_len]
-            mic_audio = mic_audio[:min_len]
+            # Match lengths (pad shorter stream with silence)
+            max_len = max(len(sys_audio), len(mic_audio))
+            if len(sys_audio) < max_len:
+                sys_audio = np.pad(sys_audio, (0, max_len - len(sys_audio)))
+            if len(mic_audio) < max_len:
+                mic_audio = np.pad(mic_audio, (0, max_len - len(mic_audio)))
 
             # Mix: average both streams (boost mic slightly so voice isn't drowned out)
             mixed = (sys_audio * 0.6 + mic_audio * 0.8).clip(-32768, 32767).astype(np.int16)

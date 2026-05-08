@@ -56,8 +56,14 @@ def get_pipeline():
         print("[Pyannote] First load downloads model weights — may take a few minutes")
         _pipeline = Pipeline.from_pretrained(
             "pyannote/speaker-diarization-3.1",
-            token=hf_token,
+            use_auth_token=hf_token,
         )
+        if _pipeline is None:
+            raise RuntimeError(
+                "Pipeline.from_pretrained returned None — "
+                "check that your HuggingFace token is valid and you have accepted "
+                "terms at hf.co/pyannote/speaker-diarization-3.1 and hf.co/pyannote/segmentation-3.0"
+            )
         print("[Pyannote] Model loaded ✅")
     return _pipeline
 
