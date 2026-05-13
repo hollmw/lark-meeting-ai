@@ -169,9 +169,109 @@
     .no-items { color: #ccc; font-style: italic; font-size: 12px; }
     hr.divider { border: none; border-top: 1px solid #f0f0f0; margin: 8px 0; }
 
+    /* ── Speaker naming ── */
+    .speaker-section { margin-top: 10px; margin-bottom: 10px; }
+    .speaker-section-title {
+      font-size: 9px; font-weight: 700; color: #999;
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;
+    }
+    .speaker-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .speaker-label {
+      font-size: 11px; color: #888; white-space: nowrap;
+      width: 90px; flex-shrink: 0; font-family: monospace;
+    }
+    .speaker-input {
+      flex: 1; padding: 6px 8px; border: 1.5px solid #e5e5e5;
+      border-radius: 6px; font-size: 12px; outline: none;
+    }
+    .speaker-input:focus { border-color: #4F6EF7; }
+
     /* ── Insert section ── */
     .insert-section { margin-top: 10px; }
     .insert-status { font-size: 11px; color: #555; text-align: center; min-height: 15px; margin-top: 4px; }
+
+    /* ── Cancel processing ── */
+    .btn-cancel-pipeline {
+      background: none; border: 1.5px solid #e5e5e5;
+      color: #999; width: 100%; padding: 9px;
+      border-radius: 9px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.18s; margin-bottom: 7px;
+      display: none;
+    }
+    .btn-cancel-pipeline.visible { display: block; }
+    .btn-cancel-pipeline:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+    .confirm-row {
+      display: none; gap: 6px; margin-bottom: 7px;
+    }
+    .confirm-row.visible { display: flex; }
+    .confirm-row span {
+      font-size: 11px; color: #555; line-height: 1;
+      display: flex; align-items: center; flex-shrink: 0;
+    }
+    .btn-confirm-yes {
+      flex: 1; padding: 9px; border-radius: 8px; border: none;
+      background: #ef4444; color: white;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-confirm-yes:hover { background: #dc2626; }
+    .btn-confirm-no {
+      flex: 1; padding: 9px; border-radius: 8px; border: none;
+      background: #f3f4f6; color: #444;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-confirm-no:hover { background: #e5e7eb; }
+
+    /* ── Mute / Deafen ── */
+    .mute-row {
+      display: none;
+      gap: 8px;
+      margin-bottom: 10px;
+      justify-content: center;
+    }
+    .mute-row.visible { display: flex; }
+    .btn-icon {
+      flex: 1; padding: 10px 6px;
+      border-radius: 9px; border: 2px solid #e5e5e5;
+      background: white; font-size: 18px;
+      cursor: pointer; transition: all 0.18s;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+    }
+    .btn-icon span.label {
+      font-size: 9px; font-weight: 600; color: #999;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .btn-icon:hover { border-color: #bbb; background: #f7f8fa; }
+    .btn-icon.active {
+      background: #fef2f2; border-color: #ef4444; color: #ef4444;
+    }
+    .btn-icon.active span.label { color: #ef4444; }
+
+    /* ── Device picker ── */
+    .device-group { text-align: left; margin-bottom: 10px; }
+    .device-group label {
+      font-size: 10px; font-weight: 600; color: #999;
+      display: block; margin-bottom: 3px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .device-group select {
+      width: 100%; padding: 9px 10px;
+      border: 1.5px solid #e5e5e5; border-radius: 7px;
+      font-size: 12px; color: #1a1a1a;
+      background: white; outline: none;
+      transition: border-color 0.2s; cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .device-group select:focus { border-color: #4F6EF7; }
+    .device-group select:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* ── Footer ── */
     .footer { font-size: 9px; color: #ccc; margin-top: 12px; text-align: center; }
@@ -212,11 +312,48 @@
     <div class="status-text" id="statusText">Ready to record</div>
     <div class="timer" id="timer">00:00</div>
 
+    <!-- Audio source picker -->
+    <div class="device-group" id="deviceGroup">
+      <label>🔊 Audio Source</label>
+      <select id="deviceSelect">
+        <option value="">Loading devices…</option>
+      </select>
+    </div>
+
     <button class="btn btn-start" id="startBtn" onclick="handleStart()">▶ Start Recording</button>
     <button class="btn btn-stop"  id="stopBtn"  onclick="handleStop()">⏹ Stop &amp; Generate Notes</button>
 
+    <!-- Mute / Deafen — visible while recording -->
+    <div class="mute-row" id="muteRow">
+      <button class="btn-icon" id="muteBtn" onclick="handleMute()" title="Mute microphone">
+        <span id="muteIcon">🎙️</span>
+        <span class="label" id="muteBtnLabel">Mute</span>
+      </button>
+      <button class="btn-icon" id="deafenBtn" onclick="handleDeafen()" title="Deafen (mic + speakers)">
+        <span id="deafenIcon">🔇</span>
+        <span class="label" id="deafenBtnLabel">Deafen</span>
+      </button>
+    </div>
+
+    <!-- Cancel processing -->
+    <button class="btn-cancel-pipeline" id="cancelPipelineBtn" onclick="handleCancelClick()">
+      ✕ Cancel
+    </button>
+    <div class="confirm-row" id="confirmRow">
+      <span>Are you sure?</span>
+      <button class="btn-confirm-yes" onclick="confirmCancel()">Yes, cancel</button>
+      <button class="btn-confirm-no"  onclick="dismissCancel()">No</button>
+    </div>
+
     <!-- Insert section — shown when notes are ready -->
     <div class="insert-section" id="insertSection" style="display:none;">
+
+      <!-- Speaker naming -->
+      <div class="speaker-section" id="speakerSection" style="display:none;">
+        <div class="speaker-section-title">👤 Name the speakers (optional)</div>
+        <div id="speakerRows"></div>
+      </div>
+
       <!-- If no doc token detected, show URL input -->
       <div class="input-group" id="docUrlGroup" style="display:none;">
         <label>Lark Doc URL</label>
@@ -351,10 +488,44 @@
     await startRecording();
   }
 
+  // ── Audio device picker ────────────────────────────────────────────────────
+  async function loadAudioDevices() {
+    const sel = document.getElementById('deviceSelect');
+    try {
+      const res  = await fetch(`${BACKEND_URL}/audio/devices`);
+      const data = await res.json();
+      const devices = data.devices || [];
+
+      sel.innerHTML = '';
+      if (devices.length === 0) {
+        sel.innerHTML = '<option value="">No loopback devices found</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      devices.forEach((d, i) => {
+        const opt = document.createElement('option');
+        opt.value = d.index;
+        opt.textContent = d.name.length > 42 ? d.name.slice(0, 40) + '…' : d.name;
+        if (i === 0) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.disabled = false;
+    } catch (e) {
+      sel.innerHTML = '<option value="">⚠️ Server not reachable</option>';
+      sel.disabled = true;
+    }
+  }
+
   // ── Recording ──────────────────────────────────────────────────────────────
   async function startRecording() {
     setState('recording');
-    const url = `${BACKEND_URL}/recording/start`;
+
+    // Build URL with selected device index (if any)
+    const sel = document.getElementById('deviceSelect');
+    const deviceIndex = sel && sel.value !== '' ? parseInt(sel.value, 10) : null;
+    let url = `${BACKEND_URL}/recording/start`;
+    if (deviceIndex !== null) url += `?device_index=${deviceIndex}`;
 
     try {
       const res = await fetch(url, { method: 'POST' });
@@ -397,12 +568,14 @@
           clearInterval(pollInterval);
           setState('done');
           statusText.textContent = '✅ Notes ready!';
-          if (data.notes) showNotes(data.notes);
+          if (data.notes) {
+            showNotes(data.notes);
+            buildSpeakerInputs(data.notes.speakers || []);
+          }
           document.getElementById('insertSection').style.display = 'block';
-          // If we already have a doc token, auto-insert immediately
           if (detectedDocToken) {
             document.getElementById('docUrlGroup').style.display = 'none';
-            handleInsertToDoc();  // auto-insert, no button click needed
+          }
         } else if (data.status === 'error') {
           clearInterval(pollInterval);
           setState('error');
@@ -412,6 +585,33 @@
         // backend still processing — keep polling
       }
     }, 3000);
+  }
+
+  // ── Speaker naming ─────────────────────────────────────────────────────────
+  function buildSpeakerInputs(speakers) {
+    const section = document.getElementById('speakerSection');
+    const rows    = document.getElementById('speakerRows');
+    rows.innerHTML = '';
+    if (!speakers || speakers.length === 0) { section.style.display = 'none'; return; }
+    speakers.forEach(spk => {
+      const row = document.createElement('div');
+      row.className = 'speaker-row';
+      row.innerHTML = `
+        <span class="speaker-label">${escHtml(spk)}</span>
+        <input class="speaker-input" data-speaker="${escHtml(spk)}" placeholder="Real name (optional)" />
+      `;
+      rows.appendChild(row);
+    });
+    section.style.display = 'block';
+  }
+
+  function getSpeakerNames() {
+    const names = {};
+    document.querySelectorAll('.speaker-input').forEach(input => {
+      const val = input.value.trim();
+      if (val) names[input.dataset.speaker] = val;
+    });
+    return names;
   }
 
   // ── Insert into Lark Doc ───────────────────────────────────────────────────
@@ -432,11 +632,13 @@
     insertBtn.textContent = '⏳ Inserting...';
     insertStatus.textContent = '';
 
+    const speakerNames = getSpeakerNames();
+
     try {
       const res = await fetch(`${BACKEND_URL}/docs/insert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doc_url: docUrl }),
+        body: JSON.stringify({ doc_url: docUrl, speaker_names: speakerNames }),
       });
       const data = await res.json();
 
@@ -454,6 +656,83 @@
       insertBtn.textContent = '📄 Insert into Doc';
       insertStatus.textContent = '⚠️ Could not reach backend';
     }
+  }
+
+  // ── Cancel pipeline ───────────────────────────────────────────────────────
+  function handleCancelClick() {
+    // First click — show confirmation row, hide the cancel button
+    document.getElementById('cancelPipelineBtn').classList.remove('visible');
+    document.getElementById('confirmRow').classList.add('visible');
+  }
+
+  function dismissCancel() {
+    // "No" — put the cancel button back
+    document.getElementById('confirmRow').classList.remove('visible');
+    document.getElementById('cancelPipelineBtn').classList.add('visible');
+  }
+
+  async function confirmCancel() {
+    // "Yes, cancel" — stop polling and reset
+    clearInterval(pollInterval);
+    document.getElementById('confirmRow').classList.remove('visible');
+    document.getElementById('cancelPipelineBtn').classList.remove('visible');
+
+    try {
+      await fetch(`${BACKEND_URL}/recording/cancel`, { method: 'POST' });
+    } catch (e) {
+      // Server may already be idle — doesn't matter
+    }
+
+    setState('idle');
+  }
+
+  // ── Mute / Deafen ─────────────────────────────────────────────────────────
+  let isMuted    = false;
+  let isDeafened = false;
+
+  async function handleMute() {
+    try {
+      const res  = await fetch(`${BACKEND_URL}/recording/mute`, { method: 'POST' });
+      const data = await res.json();
+      isMuted    = data.muted;
+      isDeafened = data.deafened;
+    } catch (e) {
+      // optimistic toggle if backend unreachable
+      isMuted = !isMuted;
+      if (isMuted) isDeafened = false;
+    }
+    updateMuteUI();
+  }
+
+  async function handleDeafen() {
+    try {
+      const res  = await fetch(`${BACKEND_URL}/recording/deafen`, { method: 'POST' });
+      const data = await res.json();
+      isMuted    = data.muted;
+      isDeafened = data.deafened;
+    } catch (e) {
+      isDeafened = !isDeafened;
+      if (isDeafened) isMuted = false;
+    }
+    updateMuteUI();
+  }
+
+  function updateMuteUI() {
+    const muteBtn        = document.getElementById('muteBtn');
+    const deafenBtn      = document.getElementById('deafenBtn');
+    const muteBtnLabel   = document.getElementById('muteBtnLabel');
+    const deafenBtnLabel = document.getElementById('deafenBtnLabel');
+
+    // Mic icon: crossed-out when muted or deafened
+    const micSilent = isMuted || isDeafened;
+    document.getElementById('muteIcon').textContent = micSilent ? '🔇' : '🎙️';
+    muteBtnLabel.textContent = isMuted ? 'Unmute' : 'Mute';
+    muteBtn.classList.toggle('active', isMuted);
+
+    // Deafen icon
+    document.getElementById('deafenIcon').textContent = isDeafened ? '🔕' : '🔇';
+    deafenBtnLabel.textContent = isDeafened ? 'Undeafen' : 'Deafen';
+    deafenBtn.classList.toggle('active', isDeafened);
   }
 
   // ── Transcript toggle ──────────────────────────────────────────────────────
@@ -499,6 +778,9 @@
 
   // ── New meeting ────────────────────────────────────────────────────────────
   function handleNewMeeting() {
+    isMuted = false;
+    isDeafened = false;
+    updateMuteUI();
     notesCard.classList.remove('visible');
     document.getElementById('insertSection').style.display = 'none';
     const insertBtn = document.getElementById('insertBtn');
@@ -541,6 +823,21 @@
     startBtn.style.display = isIdle ? 'block' : 'none';
     stopBtn.className = 'btn btn-stop' + (isRecording   ? ' visible' : '');
     newBtn.className  = 'btn btn-new'  + (isDoneOrError ? ' visible' : '');
+
+    // Hide device picker once recording starts; bring it back on new meeting
+    const deviceGroup = document.getElementById('deviceGroup');
+    if (deviceGroup) deviceGroup.style.display = isIdle ? 'block' : 'none';
+
+    // Show mute/deafen row only while actively recording
+    const muteRow = document.getElementById('muteRow');
+    if (muteRow) muteRow.className = 'mute-row' + (isRecording ? ' visible' : '');
+
+    // Show cancel button only while processing; also reset confirm row
+    const isProcessing = s === 'processing';
+    const cancelBtn  = document.getElementById('cancelPipelineBtn');
+    const confirmRow = document.getElementById('confirmRow');
+    if (cancelBtn)  cancelBtn.className  = 'btn-cancel-pipeline' + (isProcessing ? ' visible' : '');
+    if (confirmRow) confirmRow.className = 'confirm-row';  // always reset confirm on state change
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -568,6 +865,7 @@
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   initDocsContext();
+  loadAudioDevices();
 </script>
 </body>
 </html>

@@ -24,9 +24,9 @@ app = FastAPI(title="LARK Meeting AI", version="1.0.0")
 # ── CORS (allows the Gadget to call the local backend) ────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # ── Serve Gadget UI ────────────────────────────────────────────────────────────
@@ -56,15 +56,27 @@ recording_state = {
     "error": None,          # error message if pipeline failed
 }
 
+# Reference to the running pipeline task so it can be cancelled
+_pipeline_task: asyncio.Task = None
+
+@app.get("/audio/devices")
+async def list_audio_devices():
+    """Returns all available WASAPI loopback devices for the audio source picker."""
+    devices = await asyncio.to_thread(recorder.list_loopback_devices)
+    return {"devices": devices}
+
+
 @app.post("/recording/start")
-async def start_recording(open_id: str = None):
+async def start_recording(open_id: str = None, device_index: int = None):
     """Gadget calls this when user confirms consent and starts recording.
 
     Args:
-        open_id: Optional Lark user open_id — if provided, notes will be
-                 DMed to that user when processing finishes.
+        open_id:      Optional Lark user open_id — if provided, notes will be
+                      DMed to that user when processing finishes.
+        device_index: Optional loopback device index to record from.
+                      Defaults to the first available loopback device.
     """
-    audio_path = await asyncio.to_thread(recorder.start)
+    audio_path = await asyncio.to_thread(recorder.start, device_index)
     recording_state["status"] = "recording"
     recording_state["audio_path"] = audio_path
     recording_state["open_id"] = open_id
@@ -97,8 +109,45 @@ async def stop_recording():
             recording_state["status"] = "error"
             print(f"[Server] Pipeline error: {e}")
 
-    asyncio.create_task(run_pipeline())
+    global _pipeline_task
+    _pipeline_task = asyncio.create_task(run_pipeline())
     return {"status": "processing", "audio_path": audio_path}
+
+
+@app.post("/recording/cancel")
+async def cancel_pipeline():
+    """
+    Cancels an in-progress pipeline and resets state to idle.
+    Safe to call even if no pipeline is running.
+    """
+    global _pipeline_task
+    if _pipeline_task and not _pipeline_task.done():
+        _pipeline_task.cancel()
+        try:
+            await _pipeline_task
+        except asyncio.CancelledError:
+            pass
+    _pipeline_task = None
+    recording_state["status"] = "idle"
+    recording_state["audio_path"] = None
+    recording_state["notes"] = None
+    recording_state["error"] = None
+    print("[Server] Pipeline cancelled — state reset to idle")
+    return {"status": "idle"}
+
+
+@app.post("/recording/mute")
+async def toggle_mute():
+    """Toggles microphone mute. Safe to call whether or not recording is active."""
+    muted = await asyncio.to_thread(recorder.toggle_mute)
+    return {"muted": muted, "deafened": recorder.mute_state["deafened"]}
+
+
+@app.post("/recording/deafen")
+async def toggle_deafen():
+    """Toggles deafen (mic + system audio silenced)."""
+    deafened = await asyncio.to_thread(recorder.toggle_deafen)
+    return {"muted": recorder.mute_state["muted"], "deafened": deafened}
 
 
 @app.get("/recording/status")
@@ -118,6 +167,7 @@ async def get_status():
             "duration": notes.get("duration", ""),
             "language": notes.get("language", ""),
             "transcript": notes.get("transcript", ""),  # full raw transcript
+            "speakers": notes.get("speakers", []),       # for speaker-rename UI
         }
     if recording_state["status"] == "error":
         resp["error"] = recording_state.get("error", "Unknown error")
@@ -127,7 +177,8 @@ async def get_status():
 # ── Insert notes into Lark Doc ────────────────────────────────────────────────
 
 class DocInsertRequest(BaseModel):
-    doc_url: str   # Lark Doc URL or raw doc token
+    doc_url: str
+    speaker_names: dict = {}   # e.g. {"SPEAKER_00": "Max", "SPEAKER_01": "Joyce"}
 
 @app.post("/docs/insert")
 async def insert_to_doc(req: DocInsertRequest):
@@ -151,8 +202,11 @@ async def insert_to_doc(req: DocInsertRequest):
             from lark_app.docs import resolve_wiki_to_doc_token
             doc_token = await resolve_wiki_to_doc_token(doc_token)
 
-        result = await insert_meeting_notes(doc_token, recording_state["notes"])
+        result = await insert_meeting_notes(doc_token, recording_state["notes"], req.speaker_names)
         return {"status": "ok", "doc_token": doc_token, "result": result}
+    except PermissionError as e:
+        print(f"[Docs] Insert failed (permissions): {e}")
+        return JSONResponse(status_code=403, content={"error": str(e)})
     except Exception as e:
         print(f"[Docs] Insert failed: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})

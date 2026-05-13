@@ -14,11 +14,20 @@ Called from app.py when recording stops.
 """
 
 import asyncio
+import yaml
 from pathlib import Path
 from pipeline.transcribe import transcribe
 from pipeline.diarize import diarize, merge_transcript_with_speakers, format_transcript
 from pipeline.summarise import summarise
 from lark_app import bot
+
+def _load_config():
+    config_path = Path(__file__).parent.parent / "config.yaml"
+    with open(config_path) as f:
+        return yaml.safe_load(f)
+
+_CONFIG = _load_config()
+_DELETE_AFTER = _CONFIG.get("audio", {}).get("delete_after_processing", True)
 
 
 async def run(audio_path: str, chat_id: str = None, user_id: str = None, open_id: str = None) -> dict:
@@ -83,6 +92,14 @@ async def run(audio_path: str, chat_id: str = None, user_id: str = None, open_id
     print("[Pipeline] TRANSCRIPT:")
     print(formatted_transcript if formatted_transcript.strip() else "(empty — no speech detected)")
     print("[Pipeline] ─────────────────────────────────\n")
+
+    # ── Cleanup audio file ────────────────────────────────────────────────────
+    if _DELETE_AFTER and audio_path:
+        try:
+            Path(audio_path).unlink(missing_ok=True)
+            print(f"[Pipeline] 🗑️  Deleted audio file: {audio_path}")
+        except Exception as e:
+            print(f"[Pipeline] ⚠️  Could not delete audio file: {e}")
 
     # ── Post to Lark ──────────────────────────────────────────────────────────
     if chat_id or open_id:

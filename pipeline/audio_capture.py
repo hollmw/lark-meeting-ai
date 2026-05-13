@@ -93,6 +93,10 @@ class AudioRecorder:
         self._mic_channels = 1
         self._mic_rate = SAMPLE_RATE
 
+        # Mute / deafen flags (thread-safe: Python bool assignment is atomic)
+        self._muted    = False   # mic silenced
+        self._deafened = False   # mic + system audio silenced
+
         # Threads
         self._system_thread = None
         self._mic_thread = None
@@ -102,17 +106,59 @@ class AudioRecorder:
     def is_recording(self):
         return not self._stop_event.is_set()
 
+    # ── Mute / Deafen ─────────────────────────────────────────────────────────
+
+    def toggle_mute(self) -> bool:
+        """Toggles microphone mute. Returns new muted state."""
+        self._muted = not self._muted
+        if self._muted:
+            self._deafened = False   # mute supersedes deafen — clear deafen
+        print(f"[Audio] Mute → {'ON' if self._muted else 'OFF'}")
+        return self._muted
+
+    def toggle_deafen(self) -> bool:
+        """
+        Toggles deafen (mic + system audio both silenced).
+        Deafening also mutes; un-deafening restores prior mute state.
+        Returns new deafened state.
+        """
+        self._deafened = not self._deafened
+        if self._deafened:
+            self._muted = False   # deafen owns both channels; clear independent mute
+        print(f"[Audio] Deafen → {'ON' if self._deafened else 'OFF'}")
+        return self._deafened
+
+    @property
+    def mute_state(self) -> dict:
+        return {"muted": self._muted, "deafened": self._deafened}
+
     # ── Devices ───────────────────────────────────────────────────────────────
 
-    def _get_loopback_device(self):
+    def list_loopback_devices(self) -> list:
+        """Returns all available WASAPI loopback devices."""
+        devices = []
+        for i in range(self.pa.get_device_count()):
+            device = self.pa.get_device_info_by_index(i)
+            if device.get("isLoopbackDevice", False):
+                devices.append({
+                    "index": i,
+                    "name": device["name"],
+                    "channels": max(1, int(device.get("maxInputChannels", 2))),
+                    "rate": int(device["defaultSampleRate"]),
+                })
+        return devices
+
+    def _get_loopback_device(self, preferred_index: int = None):
         """
         Finds the WASAPI loopback device for system audio capture.
         Returns (device_index, sample_rate, channel_count).
-        WASAPI loopback must be opened with the device's native channel count.
+        If preferred_index is set, uses that device directly.
         """
         for i in range(self.pa.get_device_count()):
             device = self.pa.get_device_info_by_index(i)
             if device.get("isLoopbackDevice", False):
+                if preferred_index is not None and i != preferred_index:
+                    continue
                 channels = max(1, int(device.get("maxInputChannels", 2)))
                 rate = int(device["defaultSampleRate"])
                 print(f"[Audio] System audio device: {device['name']} "
@@ -164,13 +210,15 @@ class AudioRecorder:
             input_device_index=device_index,
             frames_per_buffer=CHUNK,
         )
+        silent_chunk = b'\x00' * CHUNK * device_channels * 2  # int16 = 2 bytes per sample
         print("[Audio] System audio recording started")
         while not self._stop_event.is_set():
             try:
                 # Blocking read — returns in ~21ms (1024 samples @ 48kHz)
                 # Stop event is checked after every chunk, so latency is ~21ms max
                 data = stream.read(CHUNK, exception_on_overflow=False)
-                self._system_frames.append(data)
+                # Deafen silences both channels — write zeros to keep timing aligned
+                self._system_frames.append(silent_chunk if self._deafened else data)
             except Exception as e:
                 print(f"[Audio] System stream error: {e}")
                 break
@@ -188,12 +236,15 @@ class AudioRecorder:
             input_device_index=device_index,
             frames_per_buffer=CHUNK,
         )
+        silent_chunk = b'\x00' * CHUNK * device_channels * 2  # int16 = 2 bytes per sample
         print("[Audio] Microphone recording started")
         while not self._stop_event.is_set():
             try:
                 # Blocking read — returns in ~23ms (1024 samples @ 44100Hz)
                 data = stream.read(CHUNK, exception_on_overflow=False)
-                self._mic_frames.append(data)
+                # Mute silences mic only; deafen silences mic + system
+                silenced = self._muted or self._deafened
+                self._mic_frames.append(silent_chunk if silenced else data)
             except Exception as e:
                 print(f"[Audio] Mic stream error: {e}")
                 break
@@ -203,9 +254,12 @@ class AudioRecorder:
 
     # ── Start / Stop ──────────────────────────────────────────────────────────
 
-    def start(self) -> str:
+    def start(self, device_index: int = None) -> str:
         """
         Starts recording system audio + microphone.
+        Args:
+            device_index: Optional loopback device index to use.
+                          If None, picks the first available loopback device.
         Returns the output file path where audio will be saved.
         """
         if not self._stop_event.is_set():
@@ -216,6 +270,8 @@ class AudioRecorder:
         self._stop_event.clear()
         self._system_frames = []
         self._mic_frames = []
+        self._muted    = False
+        self._deafened = False
 
         # Generate output filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -225,7 +281,7 @@ class AudioRecorder:
 
         # Get devices
         try:
-            sys_index, sys_rate, sys_channels = self._get_loopback_device()
+            sys_index, sys_rate, sys_channels = self._get_loopback_device(preferred_index=device_index)
             self._system_channels = sys_channels
             self._system_rate = sys_rate
         except RuntimeError as e:

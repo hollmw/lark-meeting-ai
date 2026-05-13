@@ -58,7 +58,21 @@ async def resolve_wiki_to_doc_token(wiki_token: str) -> str:
         return obj_token
 
 
-async def insert_meeting_notes(document_id: str, notes: dict) -> dict:
+def _apply_speaker_names(notes: dict, speaker_names: dict) -> dict:
+    """Replaces SPEAKER_XX labels with real names throughout all notes fields."""
+    if not speaker_names:
+        return notes
+    import copy, json
+    notes = copy.deepcopy(notes)
+    # Serialise → replace → deserialise (handles all nested strings at once)
+    raw = json.dumps(notes)
+    # Sort by length descending so SPEAKER_01 doesn't match inside SPEAKER_010
+    for spk, name in sorted(speaker_names.items(), key=lambda x: len(x[0]), reverse=True):
+        raw = raw.replace(spk, name)
+    return json.loads(raw)
+
+
+async def insert_meeting_notes(document_id: str, notes: dict, speaker_names: dict = None) -> dict:
     """
     Inserts formatted meeting notes at the end of a Lark Doc or Wiki page.
 
@@ -69,6 +83,10 @@ async def insert_meeting_notes(document_id: str, notes: dict) -> dict:
     Returns:
         Lark API response dict
     """
+    if speaker_names:
+        notes = _apply_speaker_names(notes, speaker_names)
+        print(f"[Docs] Applied speaker names: {speaker_names}")
+
     headers = await get_auth_headers()
     blocks = _build_notes_blocks(notes)
 
@@ -101,6 +119,11 @@ async def insert_meeting_notes(document_id: str, notes: dict) -> dict:
                 timeout=30,
             )
             print(f"[Docs] Batch {i//BATCH_SIZE + 1}: {response.status_code}")
+            if response.status_code == 403:
+                raise PermissionError(
+                    f"Bot lacks Editor access to doc '{document_id}'. "
+                    "Fix: open the Lark page → Share → add your bot as Editor."
+                )
             response.raise_for_status()
             last_response = response
 
