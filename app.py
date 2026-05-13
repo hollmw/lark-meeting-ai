@@ -8,7 +8,9 @@ FastAPI server that handles:
   - Status polling
 """
 
+import os
 import asyncio
+from pathlib import Path
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,13 +26,15 @@ app = FastAPI(title="LARK Meeting AI", version="1.0.0")
 # ── CORS (allows the Gadget to call the local backend) ────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_origins=["*"],   # localhost-only server — safe to allow all origins
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
 
 # ── Serve Gadget UI ────────────────────────────────────────────────────────────
-app.mount("/gadget", StaticFiles(directory="gadget", html=True), name="gadget")
+# When frozen by PyInstaller, static assets live in MEIPASS; in dev, use relative path.
+_MEIPASS = os.environ.get('MEETING_AI_MEIPASS', str(Path(__file__).parent))
+app.mount("/gadget", StaticFiles(directory=str(Path(_MEIPASS) / "gadget"), html=True), name="gadget")
 
 
 # ── Lark Webhook ───────────────────────────────────────────────────────────────

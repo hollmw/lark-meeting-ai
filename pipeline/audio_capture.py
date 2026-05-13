@@ -17,14 +17,9 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 import pyaudiowpatch as pyaudio
-import yaml
+from pipeline._config import load_config
 
 # ── Load config ───────────────────────────────────────────────────────────────
-
-def load_config():
-    config_path = Path(__file__).parent.parent / "config.yaml"
-    with open(config_path) as f:
-        return yaml.safe_load(f)
 
 CONFIG = load_config()
 AUDIO_CONFIG = CONFIG.get("audio", {})

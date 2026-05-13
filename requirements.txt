@@ -25,8 +25,10 @@ openai-whisper==20231117
 # ── AI — Speaker Diarization ─────────────────
 pyannote.audio==3.1.1
 
-# ── AI — LLM (local via Ollama) ───────────────
-ollama==0.2.1                 # Python client for Ollama
+# ── AI — LLM ─────────────────────────────────
+ollama==0.2.1                 # local via Ollama (optional)
+groq>=0.9.0                   # free API — llama-3.3-70b (recommended)
+anthropic>=0.28.0             # Claude API (optional)
 
 # ── Config & Utilities ────────────────────────
 pyyaml==6.0.1

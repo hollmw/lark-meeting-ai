@@ -10,17 +10,12 @@ Takes a labelled transcript and generates structured meeting notes:
 Supports local (Ollama) and hosted (Claude/OpenAI) modes via config.
 """
 
-import yaml
 import json
 from pathlib import Path
+from pipeline._config import load_config
 
 
 # ── Load config ───────────────────────────────────────────────────────────────
-
-def load_config():
-    config_path = Path(__file__).parent.parent / "config.yaml"
-    with open(config_path) as f:
-        return yaml.safe_load(f)
 
 CONFIG = load_config()
 LLM_CONFIG = CONFIG.get("models", {}).get("llm", {})
@@ -47,24 +42,26 @@ def build_prompt(transcript: str, language: str = "auto") -> str:
     else:
         lang_instruction = "Write the notes in the same language(s) used in the meeting. If mixed Cantonese and English, write in English with Cantonese terms preserved where appropriate."
 
-    return f"""You are taking notes for a meeting. Read the transcript carefully from start to finish, then fill in the JSON below.
+    return f"""You are a meeting notes assistant. Summarise ONLY what is explicitly said in the transcript below.
 
 {lang_instruction}
 
-Rules:
-- summary: 3-5 sentences. Be specific — name topics, people, and concrete details discussed. Do not be vague.
-- action_items: List EVERY task, follow-up, or commitment mentioned by anyone. Include who is responsible if stated. Do not skip any.
-- decisions: List every conclusion or agreement the group reached.
+STRICT RULES:
+- Only use information that is directly stated in the transcript. Do NOT speculate, infer, or guess what "likely" happened.
+- If the transcript is short or incomplete, write a short honest summary of what was said — do not pad it out.
+- summary: 1-3 sentences max. State only what was actually discussed. If very little was said, say so briefly.
+- action_items: Only tasks explicitly mentioned. If none, return [].
+- decisions: Only conclusions explicitly reached. If none, return [].
+- Never write phrases like "the transcript does not include", "likely involved", "outcome is not specified" — just summarise what IS there.
 - Return ONLY valid JSON. No markdown, no comments, no trailing commas.
 
 {{
-    "summary": "Specific 3-5 sentence summary naming actual topics and people discussed",
+    "summary": "1-3 sentence summary of what was actually said",
     "action_items": [
-        "Concrete task — with owner in brackets if known [SPEAKER_00]",
-        "Another task — include every single one mentioned"
+        "Explicit task with owner if stated [SPEAKER_00]"
     ],
     "decisions": [
-        "Specific decision or agreement reached"
+        "Explicit decision reached"
     ],
     "key_topics": ["topic1", "topic2"],
     "speakers": ["SPEAKER_00", "SPEAKER_01"],
@@ -96,7 +93,73 @@ def summarise(transcript: str, language: str = "auto") -> dict:
     provider = LLM_CONFIG.get("provider", "ollama")
     if provider == "claude":
         return _summarise_claude(transcript, language)
+    if provider == "groq":
+        return _summarise_groq(transcript, language)
+    if provider == "deepseek":
+        return _summarise_deepseek(transcript, language)
+    if provider == "nim":
+        return _summarise_nim(transcript, language)
     return _summarise_local(transcript, language)
+
+
+def _summarise_openai_compat(transcript: str, language: str, base_url: str, label: str) -> dict:
+    """Generic OpenAI-compatible provider (DeepSeek, NIM, etc.)."""
+    from openai import OpenAI
+
+    api_key = LLM_CONFIG.get("api_key", "")
+    model   = LLM_CONFIG.get("model", "deepseek-chat")
+    prompt  = build_prompt(transcript, language)
+
+    print(f"[LLM] Summarising with {label}: {model}")
+
+    client = OpenAI(api_key=api_key, base_url=base_url)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": prompt},
+        ],
+        temperature=0.3,
+        max_tokens=2048,
+    )
+    raw = response.choices[0].message.content.strip()
+    return _parse_json_response(raw)
+
+
+def _summarise_deepseek(transcript: str, language: str) -> dict:
+    return _summarise_openai_compat(transcript, language,
+                                    base_url="https://api.deepseek.com",
+                                    label="DeepSeek")
+
+
+def _summarise_nim(transcript: str, language: str) -> dict:
+    return _summarise_openai_compat(transcript, language,
+                                    base_url="https://integrate.api.nvidia.com/v1",
+                                    label="NVIDIA NIM")
+
+
+def _summarise_groq(transcript: str, language: str) -> dict:
+    """Runs summarisation using Groq API (free tier, fast Llama 3.3 70B)."""
+    from groq import Groq
+
+    api_key = LLM_CONFIG.get("api_key", "")
+    model   = LLM_CONFIG.get("model", "llama-3.3-70b-versatile")
+    prompt  = build_prompt(transcript, language)
+
+    print(f"[LLM] Summarising with Groq: {model}")
+
+    client = Groq(api_key=api_key)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": prompt},
+        ],
+        temperature=0.3,
+        max_tokens=2048,
+    )
+    raw = response.choices[0].message.content.strip()
+    return _parse_json_response(raw)
 
 
 def _summarise_claude(transcript: str, language: str) -> dict:

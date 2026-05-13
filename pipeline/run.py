@@ -14,19 +14,13 @@ Called from app.py when recording stops.
 """
 
 import asyncio
-import yaml
 from pathlib import Path
-from pipeline.transcribe import transcribe
-from pipeline.diarize import diarize, merge_transcript_with_speakers, format_transcript
-from pipeline.summarise import summarise
-from lark_app import bot
+from pipeline._config import load_config
 
-def _load_config():
-    config_path = Path(__file__).parent.parent / "config.yaml"
-    with open(config_path) as f:
-        return yaml.safe_load(f)
+# Heavy ML imports are deferred to run() so the tray/server start instantly.
+# They're imported on first pipeline call and cached by Python's module system.
 
-_CONFIG = _load_config()
+_CONFIG = load_config()
 _DELETE_AFTER = _CONFIG.get("audio", {}).get("delete_after_processing", True)
 
 
@@ -43,6 +37,13 @@ async def run(audio_path: str, chat_id: str = None, user_id: str = None, open_id
     Returns:
         Full notes dict with transcript and summary
     """
+    # Lazy imports — only loaded here so the tray/server start instantly at launch.
+    # Python caches modules after first import, so subsequent runs are fast.
+    from pipeline.transcribe import transcribe
+    from pipeline.diarize import diarize, merge_transcript_with_speakers, format_transcript
+    from pipeline.summarise import summarise
+    from lark_app import bot
+
     # Normalise: user_id is treated as open_id for backwards compatibility
     if user_id and not open_id:
         open_id = user_id
@@ -113,6 +114,20 @@ async def run(audio_path: str, chat_id: str = None, user_id: str = None, open_id
             print("[Pipeline] ✅ Notes posted to Lark")
         except Exception as e:
             print(f"[Pipeline] ⚠️  Could not post to Lark: {e}")
+
+    # ── Auto-insert into default doc ──────────────────────────────────────────
+    default_doc_url = _CONFIG.get("output", {}).get("default_doc_url", "").strip()
+    if default_doc_url:
+        try:
+            from lark_app.docs import insert_meeting_notes, extract_doc_token, resolve_wiki_to_doc_token
+            doc_token, is_wiki = extract_doc_token(default_doc_url)
+            if is_wiki:
+                doc_token = await resolve_wiki_to_doc_token(doc_token)
+            print(f"[Pipeline] Auto-inserting into default doc: {doc_token}")
+            await insert_meeting_notes(doc_token, notes)
+            print("[Pipeline] ✅ Notes auto-inserted into default doc")
+        except Exception as e:
+            print(f"[Pipeline] ⚠️  Auto-insert failed: {e}")
 
     return notes
 
