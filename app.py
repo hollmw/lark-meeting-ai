@@ -141,11 +141,16 @@ async def insert_to_doc(req: DocInsertRequest):
             content={"error": "No notes available — run a recording first"}
         )
 
-    doc_token = extract_doc_token(req.doc_url)
+    doc_token, is_wiki = extract_doc_token(req.doc_url)
     if not doc_token:
         return JSONResponse(status_code=400, content={"error": "Invalid doc URL or token"})
 
     try:
+        # Wiki pages need their token resolved to the underlying doc token first
+        if is_wiki:
+            from lark_app.docs import resolve_wiki_to_doc_token
+            doc_token = await resolve_wiki_to_doc_token(doc_token)
+
         result = await insert_meeting_notes(doc_token, recording_state["notes"])
         return {"status": "ok", "doc_token": doc_token, "result": result}
     except Exception as e:
@@ -171,4 +176,4 @@ async def shutdown():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=False)

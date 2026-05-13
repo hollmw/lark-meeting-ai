@@ -18,24 +18,52 @@ LARK_API_BASE = "https://open.larksuite.com/open-apis"
 
 def extract_doc_token(url_or_token: str) -> str:
     """
-    Extracts the document token from a Lark Doc URL, or returns the raw token.
+    Extracts the token from a Lark Doc or Wiki URL.
+    Returns a tuple: (token, is_wiki)
     Handles URLs like:
       https://xxx.larksuite.com/docx/TOKEN
-      https://xxx.feishu.cn/docx/TOKEN
+      https://xxx.larksuite.com/wiki/TOKEN
       TOKEN (passed directly)
     """
     match = re.search(r'/docx/([A-Za-z0-9_-]+)', url_or_token)
     if match:
-        return match.group(1)
-    return url_or_token.strip()
+        return match.group(1), False
+
+    match = re.search(r'/wiki/([A-Za-z0-9_-]+)', url_or_token)
+    if match:
+        return match.group(1), True
+
+    return url_or_token.strip(), False
+
+
+async def resolve_wiki_to_doc_token(wiki_token: str) -> str:
+    """
+    Resolves a Wiki node token to the underlying document token.
+    Wiki pages are backed by a regular doc — we need that doc token to insert blocks.
+    """
+    headers = await get_auth_headers()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{LARK_API_BASE}/wiki/v2/spaces/get_node",
+            headers=headers,
+            params={"token": wiki_token},
+            timeout=15,
+        )
+        response.raise_for_status()
+        data = response.json()
+        obj_token = data.get("data", {}).get("node", {}).get("obj_token")
+        if not obj_token:
+            raise ValueError(f"Could not resolve wiki token to doc token: {data}")
+        print(f"[Docs] Resolved wiki token {wiki_token} → doc token {obj_token}")
+        return obj_token
 
 
 async def insert_meeting_notes(document_id: str, notes: dict) -> dict:
     """
-    Inserts formatted meeting notes at the end of a Lark Doc.
+    Inserts formatted meeting notes at the end of a Lark Doc or Wiki page.
 
     Args:
-        document_id: Lark Doc token (from URL or Docs Add-on context)
+        document_id: Lark Doc token or Wiki node token
         notes:       Notes dict from the pipeline (summary, action_items, etc.)
 
     Returns:
@@ -47,18 +75,37 @@ async def insert_meeting_notes(document_id: str, notes: dict) -> dict:
     print(f"[Docs] Inserting {len(blocks)} blocks into doc: {document_id}")
 
     async with httpx.AsyncClient() as client:
-        # The document root block has the same ID as the document itself
-        response = await client.post(
-            f"{LARK_API_BASE}/docx/v1/documents/{document_id}/blocks/{document_id}/children",
+        # Step 1: fetch doc to get the actual root block ID and revision
+        doc_resp = await client.get(
+            f"{LARK_API_BASE}/docx/v1/documents/{document_id}",
             headers=headers,
-            json={"children": blocks},
-            timeout=30,
+            timeout=15,
         )
-        if not response.is_success:
-            print(f"[Docs] API error {response.status_code}: {response.text}")
-        response.raise_for_status()
+        print(f"[Docs] Fetch doc response: {doc_resp.status_code}: {doc_resp.text[:300]}")
+        doc_resp.raise_for_status()
+        doc_data   = doc_resp.json().get("data", {}).get("document", {})
+        root_block = doc_data.get("block_id", document_id)
+        revision   = doc_data.get("revision_id", -1)
+        print(f"[Docs] Root block: {root_block}, revision: {revision}")
+
+        # Step 2: insert blocks in batches of 50 (Lark API limit)
+        BATCH_SIZE = 50
+        last_response = None
+        for i in range(0, len(blocks), BATCH_SIZE):
+            batch = blocks[i:i + BATCH_SIZE]
+            response = await client.post(
+                f"{LARK_API_BASE}/docx/v1/documents/{document_id}/blocks/{root_block}/children",
+                headers=headers,
+                params={"document_revision_id": -1},
+                json={"children": batch},
+                timeout=30,
+            )
+            print(f"[Docs] Batch {i//BATCH_SIZE + 1}: {response.status_code}")
+            response.raise_for_status()
+            last_response = response
+
         print("[Docs] ✅ Notes inserted into doc")
-        return response.json()
+        return last_response.json()
 
 
 # ── Block builders ────────────────────────────────────────────────────────────
@@ -149,8 +196,7 @@ def _text(content: str) -> dict:
     return {
         "block_type": 2,
         "text": {
-            "elements": [{"text_run": {"content": content}}],
-            "style": {}
+            "elements": [{"text_run": {"content": content or " "}}],
         }
     }
 
@@ -159,7 +205,6 @@ def _heading1(content: str) -> dict:
         "block_type": 3,
         "heading1": {
             "elements": [{"text_run": {"content": content}}],
-            "style": {}
         }
     }
 
@@ -168,7 +213,6 @@ def _heading2(content: str) -> dict:
         "block_type": 4,
         "heading2": {
             "elements": [{"text_run": {"content": content}}],
-            "style": {}
         }
     }
 
@@ -177,9 +221,8 @@ def _bullet(content: str) -> dict:
         "block_type": 12,
         "bullet": {
             "elements": [{"text_run": {"content": content}}],
-            "style": {}
         }
     }
 
 def _divider() -> dict:
-    return {"block_type": 22}
+    return _text("─" * 40)

@@ -96,6 +96,7 @@ class AudioRecorder:
         # Threads
         self._system_thread = None
         self._mic_thread = None
+        self._silence_thread = None
 
     @property
     def is_recording(self):
@@ -129,6 +130,24 @@ class AudioRecorder:
         rate = int(info["defaultSampleRate"])
         print(f"[Audio] Microphone device: {info['name']} ({channels}ch @ {rate}Hz)")
         return info["index"], rate, channels
+
+    def _play_silence(self, device_rate: int, device_channels: int):
+        """
+        Plays silent audio on the output device to keep WASAPI from going idle.
+        Without this, loopback capture returns silence when no audio is playing.
+        """
+        silent_chunk = b'\x00' * CHUNK * device_channels * 2  # int16 = 2 bytes
+        stream = self.pa.open(
+            format=FORMAT,
+            channels=device_channels,
+            rate=device_rate,
+            output=True,
+            frames_per_buffer=CHUNK,
+        )
+        while not self._stop_event.is_set():
+            stream.write(silent_chunk)
+        stream.stop_stream()
+        stream.close()
 
     # ── Recording threads ─────────────────────────────────────────────────────
 
@@ -221,6 +240,14 @@ class AudioRecorder:
 
         # Start threads
         if sys_index is not None:
+            # Keep audio device awake so loopback captures even during silence
+            self._silence_thread = threading.Thread(
+                target=self._play_silence,
+                args=(sys_rate, sys_channels),
+                daemon=True,
+            )
+            self._silence_thread.start()
+
             self._system_thread = threading.Thread(
                 target=self._record_system_audio,
                 args=(sys_index, sys_rate, sys_channels),
@@ -251,6 +278,8 @@ class AudioRecorder:
         self._stop_event.set()
 
         # Wait for threads to exit cleanly (up to 10s each)
+        if self._silence_thread:
+            self._silence_thread.join(timeout=10)
         if self._system_thread:
             self._system_thread.join(timeout=10)
         if self._mic_thread:
@@ -295,7 +324,7 @@ class AudioRecorder:
                 mic_audio = np.pad(mic_audio, (0, max_len - len(mic_audio)))
 
             # Mix: average both streams (boost mic slightly so voice isn't drowned out)
-            mixed = (sys_audio * 0.6 + mic_audio * 0.8).clip(-32768, 32767).astype(np.int16)
+            mixed = (sys_audio * 1.5 + mic_audio * 0.8).clip(-32768, 32767).astype(np.int16)
             audio_data = mixed.tobytes()
 
         elif has_system:

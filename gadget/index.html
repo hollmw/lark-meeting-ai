@@ -221,7 +221,7 @@
       <div class="input-group" id="docUrlGroup" style="display:none;">
         <label>Lark Doc URL</label>
         <input type="text" id="docUrlInput" placeholder="https://xxx.larksuite.com/docx/..." />
-        <div class="input-hint">Paste the URL of the doc to insert notes into</div>
+        <div class="input-hint">Paste once — saved automatically for next time</div>
       </div>
       <button class="btn btn-insert" id="insertBtn" onclick="handleInsertToDoc()">
         📄 Insert into This Doc
@@ -399,10 +399,10 @@
           statusText.textContent = '✅ Notes ready!';
           if (data.notes) showNotes(data.notes);
           document.getElementById('insertSection').style.display = 'block';
-          // If we already have a doc token, no URL input needed
+          // If we already have a doc token, auto-insert immediately
           if (detectedDocToken) {
             document.getElementById('docUrlGroup').style.display = 'none';
-          }
+            handleInsertToDoc();  // auto-insert, no button click needed
         } else if (data.status === 'error') {
           clearInterval(pollInterval);
           setState('error');
@@ -553,6 +553,18 @@
   function escHtml(str) {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+
+  // ── Persist doc URL across sessions ───────────────────────────────────────
+  const docUrlInput = document.getElementById('docUrlInput');
+
+  // Load saved URL on startup
+  const savedDocUrl = localStorage.getItem('lark_doc_url');
+  if (savedDocUrl) docUrlInput.value = savedDocUrl;
+
+  // Save whenever user changes it
+  docUrlInput.addEventListener('input', () => {
+    localStorage.setItem('lark_doc_url', docUrlInput.value.trim());
+  });
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   initDocsContext();

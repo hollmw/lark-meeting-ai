@@ -47,23 +47,24 @@ def build_prompt(transcript: str, language: str = "auto") -> str:
     else:
         lang_instruction = "Write the notes in the same language(s) used in the meeting. If mixed Cantonese and English, write in English with Cantonese terms preserved where appropriate."
 
-    return f"""Please analyse the following meeting transcript and produce structured meeting notes.
+    return f"""You are taking notes for a meeting. Read the transcript carefully from start to finish, then fill in the JSON below.
 
 {lang_instruction}
 
-Return ONLY a JSON object in this exact format.
-IMPORTANT: action_items and decisions must be plain strings — never return objects or dicts.
-Extract ALL action items mentioned, even if there are 4 or 5.
+Rules:
+- summary: 3-5 sentences. Be specific — name topics, people, and concrete details discussed. Do not be vague.
+- action_items: List EVERY task, follow-up, or commitment mentioned by anyone. Include who is responsible if stated. Do not skip any.
+- decisions: List every conclusion or agreement the group reached.
+- Return ONLY valid JSON. No markdown, no comments, no trailing commas.
+
 {{
-    "summary": "2-4 sentence overview of what was discussed",
+    "summary": "Specific 3-5 sentence summary naming actual topics and people discussed",
     "action_items": [
-        "First action item with owner name in brackets if mentioned",
-        "Second action item",
-        "Third action item — include every task that was agreed upon"
+        "Concrete task — with owner in brackets if known [SPEAKER_00]",
+        "Another task — include every single one mentioned"
     ],
     "decisions": [
-        "First decision made",
-        "Second decision made"
+        "Specific decision or agreement reached"
     ],
     "key_topics": ["topic1", "topic2"],
     "speakers": ["SPEAKER_00", "SPEAKER_01"],
@@ -92,7 +93,31 @@ def summarise(transcript: str, language: str = "auto") -> dict:
     """
     if BACKEND_MODE == "hosted":
         return _summarise_hosted(transcript, language)
+    provider = LLM_CONFIG.get("provider", "ollama")
+    if provider == "claude":
+        return _summarise_claude(transcript, language)
     return _summarise_local(transcript, language)
+
+
+def _summarise_claude(transcript: str, language: str) -> dict:
+    """Runs summarisation using Claude API."""
+    import anthropic
+
+    api_key = LLM_CONFIG.get("api_key", "")
+    model   = LLM_CONFIG.get("model", "claude-haiku-4-5-20251001")
+    prompt  = build_prompt(transcript, language)
+
+    print(f"[LLM] Summarising with Claude: {model}")
+
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model=model,
+        max_tokens=2048,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    raw = message.content[0].text.strip()
+    return _parse_json_response(raw)
 
 
 def _summarise_local(transcript: str, language: str) -> dict:
