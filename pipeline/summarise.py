@@ -29,20 +29,7 @@ You support multilingual meetings including English and Cantonese.
 Your job is to produce clear, structured meeting notes from a transcript.
 Always respond in valid JSON only — no extra text, no markdown, no // comments, no trailing commas."""
 
-def build_prompt(transcript: str, language: str = "auto") -> str:
-    """
-    Builds the summarisation prompt.
-    Instructs the LLM to output notes in the same language(s) as the meeting.
-    """
-    lang_instruction = ""
-    if language in ("zh", "yue", "zh-HK"):
-        lang_instruction = "The meeting was primarily in Cantonese/Chinese. Write the notes in Traditional Chinese (繁體中文)."
-    elif language == "en":
-        lang_instruction = "Write the notes in English."
-    else:
-        lang_instruction = "Write the notes in the same language(s) used in the meeting. If mixed Cantonese and English, write in English with Cantonese terms preserved where appropriate."
-
-    return f"""You are a meeting notes assistant. Summarise ONLY what is explicitly said in the transcript below.
+DEFAULT_PROMPT_TEMPLATE = """You are a meeting notes assistant. Summarise ONLY what is explicitly said in the transcript below.
 
 {lang_instruction}
 
@@ -70,6 +57,44 @@ STRICT RULES:
 
 TRANSCRIPT:
 {transcript}"""
+
+
+def build_prompt(transcript: str, language: str = "auto") -> str:
+    """
+    Builds the summarisation prompt.
+    Uses custom_prompt from config if set, otherwise uses the default template.
+    """
+    # Check config for forced output language (overrides auto-detect)
+    output_lang = CONFIG.get("output", {}).get("language", "auto")
+
+    if output_lang == "en" or output_lang == "auto":
+        if language in ("zh", "yue", "zh-HK"):
+            lang_instruction = "The meeting was spoken in Cantonese/Chinese. Write ALL notes in English."
+        else:
+            lang_instruction = "Write the notes in English."
+    elif output_lang in ("zh", "zh-HK", "yue"):
+        lang_instruction = "Write the notes in Traditional Chinese (繁體中文)."
+    else:
+        lang_instruction = f"Write the notes in {output_lang}."
+
+    # Use custom prompt from config if the user has set one
+    template = LLM_CONFIG.get("custom_prompt", "").strip() or DEFAULT_PROMPT_TEMPLATE
+
+    return template.format(lang_instruction=lang_instruction, transcript=transcript)
+
+
+def get_prompt_template() -> str:
+    """Returns the active prompt template (custom or default) for display in settings."""
+    return LLM_CONFIG.get("custom_prompt", "").strip() or DEFAULT_PROMPT_TEMPLATE
+
+
+def reload_config():
+    """Reloads config from disk — called after settings are saved."""
+    global CONFIG, LLM_CONFIG, BACKEND_MODE
+    CONFIG       = load_config()
+    LLM_CONFIG   = CONFIG.get("models", {}).get("llm", {})
+    BACKEND_MODE = CONFIG.get("backend", {}).get("mode", "local")
+
 
 
 # ── Summarisation ─────────────────────────────────────────────────────────────

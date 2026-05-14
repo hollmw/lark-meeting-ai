@@ -30,6 +30,12 @@ ollama==0.2.1                 # local via Ollama (optional)
 groq>=0.9.0                   # free API — llama-3.3-70b (recommended)
 anthropic>=0.28.0             # Claude API (optional)
 
+# ── Windows audio volume (mic control) ───────
+pycaw>=20230326
+
+# ── OpenAI-compatible client (used for NVIDIA NIM) ────
+openai>=1.30.0
+
 # ── Config & Utilities ────────────────────────
 pyyaml==6.0.1
 python-dotenv==1.0.1

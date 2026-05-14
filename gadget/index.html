@@ -273,8 +273,173 @@
     .device-group select:focus { border-color: #4F6EF7; }
     .device-group select:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* ── VU Meters ── */
+    .vu-section {
+      display: none; margin: 10px 0;
+      background: #f9fafb; border: 1px solid #e5e5e5;
+      border-radius: 9px; padding: 10px 12px;
+    }
+    .vu-section.visible { display: block; }
+    .vu-meter-group { margin-bottom: 10px; }
+    .vu-meter-group:last-child { margin-bottom: 0; }
+    .vu-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; font-weight: 600; color: #666;
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px;
+    }
+    .vu-vol-pct { color: #4F6EF7; font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
+    .vu-bar-wrap {
+      position: relative; height: 10px;
+      background: #e5e5e5; border-radius: 5px;
+      overflow: visible; margin-bottom: 7px;
+    }
+    .vu-bar {
+      height: 100%; width: 0%; border-radius: 5px;
+      background: linear-gradient(to right,
+        #22c55e 0%, #22c55e 55%,
+        #f59e0b 70%, #ef4444 100%);
+      transition: width 0.09s ease-out;
+    }
+    .vu-peak {
+      position: absolute; top: -2px; bottom: -2px;
+      width: 2px; background: #ef4444; border-radius: 1px;
+      opacity: 0; left: 0%;
+    }
+    .vu-slider {
+      width: 100%; height: 3px;
+      -webkit-appearance: none; appearance: none;
+      background: #e5e5e5; border-radius: 2px;
+      outline: none; cursor: pointer;
+    }
+    .vu-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #4F6EF7; cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .vu-slider::-webkit-slider-thumb:hover { background: #3a56c9; }
+    .vu-mic-vol { margin-top: 10px; padding-top: 10px; border-top: 1px solid #efefef; }
+    .btn-monitor {
+      width: 100%; margin-top: 10px; padding: 9px;
+      border-radius: 8px; border: 1.5px solid #e5e5e5;
+      background: white; color: #555;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-monitor:hover { border-color: #4F6EF7; color: #4F6EF7; background: #f0f4ff; }
+    .btn-monitor.active { background: #4F6EF7; color: white; border-color: #4F6EF7; }
+
+    /* ── Pipeline console ── */
+    .pipeline-console {
+      display: none;
+      background: #111827; border-radius: 9px;
+      padding: 10px 12px; margin-top: 10px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 10.5px; color: #9ca3af;
+      max-height: 160px; overflow-y: auto;
+      text-align: left; line-height: 1.6;
+      border: 1px solid #1f2937;
+    }
+    .pipeline-console.visible { display: block; }
+    .pipeline-console .log-line { white-space: pre-wrap; word-break: break-all; }
+    .pipeline-console .log-ok   { color: #34d399; }
+    .pipeline-console .log-warn { color: #fbbf24; }
+    .pipeline-console .log-step { color: #60a5fa; font-weight: 600; }
+
+    /* ── Audio file row ── */
+    .audio-file-row {
+      display: none; align-items: center; gap: 8px;
+      background: #f9fafb; border: 1px solid #e5e5e5;
+      border-radius: 8px; padding: 8px 10px; margin-top: 10px;
+      text-align: left;
+    }
+    .audio-file-row.visible { display: flex; }
+    .audio-file-icon { font-size: 15px; flex-shrink: 0; }
+    .audio-file-info { flex: 1; min-width: 0; }
+    .audio-file-name { font-size: 11px; font-weight: 600; color: #333;
+                       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .audio-file-path { font-size: 9px; color: #aaa; font-family: monospace;
+                       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-delete-audio {
+      flex-shrink: 0; background: none; border: 1.5px solid #e5e5e5;
+      color: #999; border-radius: 6px; padding: 5px 8px;
+      font-size: 11px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-delete-audio:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+
     /* ── Footer ── */
-    .footer { font-size: 9px; color: #ccc; margin-top: 12px; text-align: center; }
+    .footer {
+      font-size: 9px; color: #ccc; margin-top: 12px;
+      text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-settings-toggle {
+      background: none; border: 1.5px solid #e5e5e5; color: #aaa;
+      border-radius: 7px; padding: 4px 9px; font-size: 11px; cursor: pointer;
+      transition: all 0.18s; display: flex; align-items: center; gap: 4px;
+    }
+    .btn-settings-toggle:hover { border-color: #4F6EF7; color: #4F6EF7; background: #f0f4ff; }
+
+    /* ── Settings card ── */
+    .settings-card {
+      background: white; border-radius: 14px;
+      padding: 18px 16px; width: 100%; max-width: 360px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-top: 12px; text-align: left; display: none;
+    }
+    .settings-card.visible { display: block; }
+    .settings-card h2 { font-size: 13px; font-weight: 700; margin-bottom: 14px; color: #1a1a1a; }
+    .settings-group { margin-bottom: 14px; }
+    .settings-section-title {
+      font-size: 9px; font-weight: 700; color: #999;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 8px; padding-bottom: 4px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .settings-row { margin-bottom: 8px; }
+    .settings-row label {
+      font-size: 10px; font-weight: 600; color: #888;
+      display: block; margin-bottom: 3px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .settings-row input,
+    .settings-row select,
+    .settings-row textarea {
+      width: 100%; padding: 8px 10px;
+      border: 1.5px solid #e5e5e5; border-radius: 7px;
+      font-size: 12px; color: #1a1a1a;
+      background: white; outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .settings-row input:focus,
+    .settings-row select:focus,
+    .settings-row textarea:focus { border-color: #4F6EF7; }
+    .settings-row select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 28px; cursor: pointer;
+    }
+    .settings-row textarea {
+      font-size: 11px; font-family: 'Consolas', monospace;
+      resize: vertical; min-height: 120px;
+    }
+    .settings-hint { font-size: 10px; color: #bbb; margin-top: 3px; }
+    .settings-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-save-settings {
+      flex: 1; background: #4F6EF7; color: white;
+      border: none; border-radius: 9px; padding: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-save-settings:hover { background: #3a56c9; }
+    .btn-reset-prompt {
+      background: none; border: 1.5px solid #e5e5e5; color: #888;
+      border-radius: 7px; padding: 5px 10px; font-size: 11px; cursor: pointer;
+    }
+    .btn-reset-prompt:hover { border-color: #bbb; color: #555; }
+    .settings-save-status { font-size: 11px; color: #22c55e; margin-top: 8px; text-align: center; min-height: 15px; }
   </style>
 </head>
 <body>
@@ -323,6 +488,48 @@
     <button class="btn btn-start" id="startBtn" onclick="handleStart()">▶ Start Recording</button>
     <button class="btn btn-stop"  id="stopBtn"  onclick="handleStop()">⏹ Stop &amp; Generate Notes</button>
 
+    <!-- VU Meters — visible while recording or monitoring -->
+    <div class="vu-section" id="vuSection">
+      <div class="vu-meter-group">
+        <div class="vu-label">
+          <span>🎙️ Mic</span>
+          <span class="vu-vol-pct" id="micVolPct">—</span>
+        </div>
+        <div class="vu-bar-wrap">
+          <div class="vu-bar" id="micBar"></div>
+          <div class="vu-peak" id="micPeak"></div>
+        </div>
+      </div>
+      <div class="vu-meter-group">
+        <div class="vu-label">
+          <span>🔊 System</span>
+          <span class="vu-vol-pct" id="sysVolPct">—</span>
+        </div>
+        <div class="vu-bar-wrap">
+          <div class="vu-bar" id="sysBar"></div>
+          <div class="vu-peak" id="sysPeak"></div>
+        </div>
+      </div>
+
+      <!-- Windows mic volume -->
+      <div class="vu-mic-vol" id="vuMicVolRow">
+        <div class="vu-label" style="margin-bottom:6px">
+          <span>Windows mic volume</span>
+          <span class="vu-vol-pct" id="micSysVolPct">—</span>
+        </div>
+        <input type="range" class="vu-slider" id="micSysSlider"
+               min="0" max="100" value="75"
+               oninput="onMicSysVolumeChange()"
+               onchange="saveMicSysVolume()">
+        <div style="font-size:9px;color:#bbb;margin-top:3px">Controls your Windows mic input level</div>
+      </div>
+
+      <!-- Monitor toggle -->
+      <button class="btn-monitor" id="monitorBtn" onclick="handleMonitor()">
+        🎧 Hear yourself — OFF
+      </button>
+    </div>
+
     <!-- Mute / Deafen — visible while recording -->
     <div class="mute-row" id="muteRow">
       <button class="btn-icon" id="muteBtn" onclick="handleMute()" title="Mute microphone">
@@ -343,6 +550,19 @@
       <span>Are you sure?</span>
       <button class="btn-confirm-yes" onclick="confirmCancel()">Yes, cancel</button>
       <button class="btn-confirm-no"  onclick="dismissCancel()">No</button>
+    </div>
+
+    <!-- Pipeline console — shown while processing -->
+    <div class="pipeline-console" id="pipelineConsole"></div>
+
+    <!-- Audio file row — shown when done -->
+    <div class="audio-file-row" id="audioFileRow">
+      <div class="audio-file-icon">🎵</div>
+      <div class="audio-file-info">
+        <div class="audio-file-name" id="audioFileName">recording.wav</div>
+        <div class="audio-file-path" id="audioFilePath"></div>
+      </div>
+      <button class="btn-delete-audio" onclick="handleDeleteAudio()" title="Delete recording">🗑️ Delete</button>
     </div>
 
     <!-- Insert section — shown when notes are ready -->
@@ -368,7 +588,10 @@
 
     <button class="btn btn-new" id="newBtn" onclick="handleNewMeeting()">+ New Meeting</button>
 
-    <div class="footer">Works on Zoom · Google Meet · Teams · Any app</div>
+    <div class="footer">
+      <span>Zoom · Meet · Teams · Any app</span>
+      <button class="btn-settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
+    </div>
   </div>
 
   <!-- Notes Preview -->
@@ -399,6 +622,104 @@
                   max-height:280px;overflow-y:auto;background:#f9f9f9;
                   padding:8px;border-radius:7px;margin-top:5px;"></div>
     </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-card" id="settingsCard">
+    <h2>⚙️ Settings</h2>
+
+    <!-- LLM -->
+    <div class="settings-group">
+      <div class="settings-section-title">🤖 AI Model</div>
+      <div class="settings-row">
+        <label>Summariser Model</label>
+        <select id="sLlmModelPicker">
+          <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B — best quality</option>
+          <option value="meta/llama-3.1-8b-instruct">Llama 3.1 8B — faster, lighter</option>
+          <option value="deepseek-ai/deepseek-r1">DeepSeek R1 — reasoning model</option>
+          <option value="mistralai/mistral-7b-instruct-v0.3">Mistral 7B — compact</option>
+          <option value="mistralai/mixtral-8x7b-instruct-v0.1">Mixtral 8x7B — mixture of experts</option>
+        </select>
+        <div class="settings-hint">All models run via NVIDIA NIM — free API</div>
+      </div>
+    </div>
+
+    <!-- Whisper -->
+    <div class="settings-group">
+      <div class="settings-section-title">🎤 Transcription (Whisper)</div>
+      <div class="settings-row">
+        <label>Model Size</label>
+        <select id="sWhisperSize">
+          <option value="medium">medium — recommended</option>
+          <option value="large-v3">large-v3 — best accuracy, slower</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label>Language</label>
+        <select id="sWhisperLang">
+          <option value="auto">auto-detect</option>
+          <option value="zh">Chinese (Cantonese / Mandarin)</option>
+          <option value="en">English</option>
+          <option value="ja">Japanese</option>
+          <option value="ko">Korean</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="es">Spanish</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label>Device</label>
+        <select id="sWhisperDevice">
+          <option value="cuda">CUDA (GPU) — faster</option>
+          <option value="cpu">CPU — slower, always works</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Pyannote -->
+    <div class="settings-group">
+      <div class="settings-section-title">👥 Speaker Detection (Pyannote)</div>
+      <div class="settings-row">
+        <label>Number of Speakers</label>
+        <select id="sSpeakers">
+          <option value="auto">auto-detect</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Output language -->
+    <div class="settings-group">
+      <div class="settings-section-title">🌐 Notes Output Language</div>
+      <div class="settings-row">
+        <label>Write notes in</label>
+        <select id="sOutputLang">
+          <option value="en">English</option>
+          <option value="zh">Traditional Chinese (繁體中文)</option>
+          <option value="auto">Match meeting language</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Prompt -->
+    <div class="settings-group">
+      <div class="settings-section-title">📝 Summarisation Prompt</div>
+      <div class="settings-row">
+        <label>Custom Prompt <span style="font-weight:400;text-transform:none">(use <code>{transcript}</code> and <code>{lang_instruction}</code>)</span></label>
+        <textarea id="sPrompt" rows="8"></textarea>
+      </div>
+      <button class="btn-reset-prompt" onclick="resetPrompt()">↺ Reset to default</button>
+    </div>
+
+    <div class="settings-actions">
+      <button class="btn-save-settings" onclick="saveSettings()">Save Settings</button>
+    </div>
+    <div class="settings-save-status" id="settingsSaveStatus"></div>
   </div>
 
 <script>
@@ -542,10 +863,13 @@
       const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
       timerEl.textContent = formatTime(elapsed);
     }, 500);
+
+    startVuMeters();
   }
 
   async function handleStop() {
     clearInterval(timerInterval);
+    stopVuMeters();
     setState('processing');
 
     try {
@@ -554,6 +878,7 @@
       console.error('Could not reach backend:', e);
     }
 
+    startLogPolling();
     pollForNotes();
   }
 
@@ -566,20 +891,24 @@
 
         if (data.status === 'done') {
           clearInterval(pollInterval);
+          stopLogPolling();
           setState('done');
           statusText.textContent = '✅ Notes ready!';
           if (data.notes) {
             showNotes(data.notes);
             buildSpeakerInputs(data.notes.speakers || []);
           }
+          if (data.audio_path) showAudioFile(data.audio_path);
           document.getElementById('insertSection').style.display = 'block';
           if (detectedDocToken) {
             document.getElementById('docUrlGroup').style.display = 'none';
           }
         } else if (data.status === 'error') {
           clearInterval(pollInterval);
+          stopLogPolling();
           setState('error');
           statusText.textContent = `⚠️ ${data.error || 'Pipeline failed'}`;
+          if (data.audio_path) showAudioFile(data.audio_path);
         }
       } catch (e) {
         // backend still processing — keep polling
@@ -674,8 +1003,10 @@
   async function confirmCancel() {
     // "Yes, cancel" — stop polling and reset
     clearInterval(pollInterval);
+    stopLogPolling();
     document.getElementById('confirmRow').classList.remove('visible');
     document.getElementById('cancelPipelineBtn').classList.remove('visible');
+    document.getElementById('pipelineConsole').classList.remove('visible');
 
     try {
       await fetch(`${BACKEND_URL}/recording/cancel`, { method: 'POST' });
@@ -789,6 +1120,13 @@
     insertBtn.style.background = '';
     document.getElementById('insertStatus').textContent = '';
     document.getElementById('docUrlInput').value = '';
+    // Reset meters, console and audio row
+    stopVuMeters();
+    document.getElementById('pipelineConsole').classList.remove('visible');
+    document.getElementById('pipelineConsole').innerHTML = '';
+    hideAudioFile();
+    const delBtn = document.querySelector('.btn-delete-audio');
+    if (delBtn) { delBtn.textContent = '🗑️ Delete'; delBtn.disabled = false; }
     setState('idle');
   }
 
@@ -862,6 +1200,311 @@
   docUrlInput.addEventListener('input', () => {
     localStorage.setItem('lark_doc_url', docUrlInput.value.trim());
   });
+
+  // ── Settings panel ────────────────────────────────────────────────────────
+  let _defaultPrompt = '';
+  let _settingsOpen  = false;
+
+  function toggleSettings() {
+    _settingsOpen = !_settingsOpen;
+    const card = document.getElementById('settingsCard');
+    if (_settingsOpen) {
+      card.classList.add('visible');
+      loadSettings();
+    } else {
+      card.classList.remove('visible');
+    }
+  }
+
+  async function loadSettings() {
+    try {
+      const res = await fetch(`${BACKEND_URL}/settings`);
+      const cfg = await res.json();
+      _defaultPrompt = cfg.default_prompt || '';
+
+      // Model picker — match saved model string
+      const picker = document.getElementById('sLlmModelPicker');
+      const saved  = cfg.llm.model || 'meta/llama-3.3-70b-instruct';
+      // Select exact match, or fall back to first option
+      picker.value = [...picker.options].some(o => o.value === saved) ? saved : picker.options[0].value;
+
+      // Prompt
+      document.getElementById('sPrompt').value = cfg.llm.custom_prompt || cfg.default_prompt || '';
+
+      // Whisper
+      document.getElementById('sWhisperSize').value   = cfg.whisper.size     || 'medium';
+      document.getElementById('sWhisperLang').value   = cfg.whisper.language || 'auto';
+      document.getElementById('sWhisperDevice').value = cfg.whisper.device   || 'cuda';
+
+      // Pyannote
+      document.getElementById('sSpeakers').value = cfg.pyannote.num_speakers || 'auto';
+
+      // Output language
+      document.getElementById('sOutputLang').value = (cfg.output && cfg.output.language) || 'en';
+    } catch (e) {
+      document.getElementById('settingsSaveStatus').textContent = '⚠️ Could not load settings — is the server running?';
+      document.getElementById('settingsSaveStatus').style.color = '#ef4444';
+    }
+  }
+
+  function resetPrompt() {
+    document.getElementById('sPrompt').value = _defaultPrompt;
+  }
+
+  async function saveSettings() {
+    const model       = document.getElementById('sLlmModelPicker').value;
+    const promptText  = document.getElementById('sPrompt').value;
+    const whisperSize   = document.getElementById('sWhisperSize').value;
+    const whisperLang   = document.getElementById('sWhisperLang').value;
+    const whisperDevice = document.getElementById('sWhisperDevice').value;
+    const numSpeakers   = document.getElementById('sSpeakers').value;
+    const outputLang    = document.getElementById('sOutputLang').value;
+
+    const statusEl = document.getElementById('settingsSaveStatus');
+    statusEl.textContent = '';
+    statusEl.style.color = '#22c55e';
+
+    const llmPayload = {
+      provider: 'nim',
+      model,
+      // Save custom prompt only if different from default
+      custom_prompt: (promptText.trim() === _defaultPrompt.trim()) ? '' : promptText,
+    };
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          llm:      llmPayload,
+          whisper:  { size: whisperSize, language: whisperLang, device: whisperDevice },
+          pyannote: { num_speakers: numSpeakers },
+          output:   { language: outputLang },
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        statusEl.textContent = '✅ Saved — model change applies to next recording';
+      } else {
+        statusEl.textContent = `⚠️ ${data.error || 'Save failed'}`;
+        statusEl.style.color = '#ef4444';
+      }
+    } catch (e) {
+      statusEl.textContent = '⚠️ Could not reach backend';
+      statusEl.style.color = '#ef4444';
+    }
+  }
+
+  // ── VU Meters ─────────────────────────────────────────────────────────────
+  let _levelInterval = null;
+  let _micPeak = 0, _sysPeak = 0;
+  let _micPeakTimer = null, _sysPeakTimer = null;
+  let _volSaveTimer = null;
+  let _isMonitoring = false;
+
+  async function startVuMeters() {
+    document.getElementById('vuSection').classList.add('visible');
+    await loadMicSysVolume();
+    _levelInterval = setInterval(async () => {
+      try {
+        const res  = await fetch(`${BACKEND_URL}/audio/levels`);
+        const data = await res.json();
+        updateMeter('mic', data.mic    || 0);
+        updateMeter('sys', data.system || 0);
+      } catch (_) {}
+    }, 110);
+  }
+
+  function stopVuMeters() {
+    clearInterval(_levelInterval);
+    _levelInterval = null;
+    updateMeter('mic', 0);
+    updateMeter('sys', 0);
+    // Keep VU section visible if monitoring, hide otherwise
+    if (!_isMonitoring) {
+      document.getElementById('vuSection').classList.remove('visible');
+    }
+  }
+
+  function updateMeter(which, level) {
+    const bar    = document.getElementById(`${which}Bar`);
+    const peakEl = document.getElementById(`${which}Peak`);
+    const pct    = Math.min(100, level * 100);
+    bar.style.width = `${pct}%`;
+
+    // Peak hold — stays at highest point for 1.5s then decays
+    if (which === 'mic') {
+      if (pct > _micPeak) {
+        _micPeak = pct;
+        clearTimeout(_micPeakTimer);
+        _micPeakTimer = setTimeout(() => { _micPeak = 0; }, 1500);
+      }
+      peakEl.style.left    = `${_micPeak}%`;
+      peakEl.style.opacity = _micPeak > 3 ? '1' : '0';
+    } else {
+      if (pct > _sysPeak) {
+        _sysPeak = pct;
+        clearTimeout(_sysPeakTimer);
+        _sysPeakTimer = setTimeout(() => { _sysPeak = 0; }, 1500);
+      }
+      peakEl.style.left    = `${_sysPeak}%`;
+      peakEl.style.opacity = _sysPeak > 3 ? '1' : '0';
+    }
+  }
+
+  // ── Windows mic volume + monitor ──────────────────────────────────────────
+  async function loadMicSysVolume() {
+    try {
+      const res  = await fetch(`${BACKEND_URL}/audio/mic-volume`);
+      const data = await res.json();
+      const row = document.getElementById('vuMicVolRow');
+      if (data.available) {
+        const pct = Math.round(data.level * 100);
+        document.getElementById('micSysSlider').value       = pct;
+        document.getElementById('micSysVolPct').textContent = `${pct}%`;
+        row.style.opacity = '1';
+      } else {
+        row.style.opacity = '0.45';
+        document.getElementById('micSysVolPct').textContent = 'N/A';
+      }
+    } catch (_) {}
+  }
+
+  function onMicSysVolumeChange() {
+    const val = document.getElementById('micSysSlider').value;
+    document.getElementById('micSysVolPct').textContent = `${val}%`;
+    clearTimeout(_volSaveTimer);
+    _volSaveTimer = setTimeout(saveMicSysVolume, 350);
+  }
+
+  async function saveMicSysVolume() {
+    const level = parseFloat(document.getElementById('micSysSlider').value) / 100;
+    try {
+      await fetch(`${BACKEND_URL}/audio/mic-volume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level }),
+      });
+    } catch (_) {}
+  }
+
+  async function handleMonitor() {
+    try {
+      const res  = await fetch(`${BACKEND_URL}/audio/monitor`, { method: 'POST' });
+      const data = await res.json();
+      _isMonitoring = data.monitoring;
+    } catch (_) {
+      // optimistic toggle if backend momentarily unreachable
+      _isMonitoring = !_isMonitoring;
+    }
+
+    const btn = document.getElementById('monitorBtn');
+    if (_isMonitoring) {
+      btn.textContent = '🎧 Hear yourself — ON';
+      btn.classList.add('active');
+      // Keep VU meters running so levels stay visible
+      document.getElementById('vuSection').classList.add('visible');
+      if (!_levelInterval) {
+        _levelInterval = setInterval(async () => {
+          try {
+            const r = await fetch(`${BACKEND_URL}/audio/levels`);
+            const d = await r.json();
+            updateMeter('mic', d.mic    || 0);
+            updateMeter('sys', d.system || 0);
+          } catch (_) {}
+        }, 110);
+      }
+    } else {
+      btn.textContent = '🎧 Hear yourself — OFF';
+      btn.classList.remove('active');
+      // Only hide VU section if not recording
+      if (state !== 'recording') {
+        clearInterval(_levelInterval);
+        _levelInterval = null;
+        updateMeter('mic', 0);
+        updateMeter('sys', 0);
+        document.getElementById('vuSection').classList.remove('visible');
+      }
+    }
+  }
+
+  // ── Pipeline console ───────────────────────────────────────────────────────
+  let _logPollInterval = null;
+  let _logLineCount    = 0;
+
+  function startLogPolling() {
+    _logLineCount = 0;
+    const console_ = document.getElementById('pipelineConsole');
+    console_.innerHTML = '';
+    console_.classList.add('visible');
+
+    _logPollInterval = setInterval(async () => {
+      try {
+        const res  = await fetch(`${BACKEND_URL}/pipeline/logs`);
+        const data = await res.json();
+        const lines = data.logs || [];
+
+        // Only append new lines
+        if (lines.length > _logLineCount) {
+          const newLines = lines.slice(_logLineCount);
+          _logLineCount = lines.length;
+          newLines.forEach(line => {
+            const el = document.createElement('div');
+            el.className = 'log-line';
+            if (line.includes('✅')) el.classList.add('log-ok');
+            else if (line.includes('⚠️') || line.includes('error') || line.includes('Error')) el.classList.add('log-warn');
+            else if (line.match(/Step \d\/\d/)) el.classList.add('log-step');
+            el.textContent = line;
+            console_.appendChild(el);
+            console_.scrollTop = console_.scrollHeight;
+          });
+        }
+      } catch (_) {}
+    }, 1200);
+  }
+
+  function stopLogPolling() {
+    clearInterval(_logPollInterval);
+    _logPollInterval = null;
+  }
+
+  // ── Audio file display + delete ────────────────────────────────────────────
+  function showAudioFile(audioPath) {
+    if (!audioPath) return;
+    const row  = document.getElementById('audioFileRow');
+    const name = document.getElementById('audioFileName');
+    const path = document.getElementById('audioFilePath');
+
+    // Extract filename from full path (works on Windows and Unix separators)
+    const filename = audioPath.replace(/\\/g, '/').split('/').pop();
+    name.textContent = filename;
+    path.textContent = audioPath;
+    row.classList.add('visible');
+  }
+
+  function hideAudioFile() {
+    document.getElementById('audioFileRow').classList.remove('visible');
+  }
+
+  async function handleDeleteAudio() {
+    const btn = document.querySelector('.btn-delete-audio');
+    btn.textContent = '⏳';
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${BACKEND_URL}/recording/delete-audio`, { method: 'POST' });
+      if (res.ok) {
+        hideAudioFile();
+      } else {
+        const d = await res.json();
+        btn.textContent = '⚠️';
+        btn.title = d.error || 'Delete failed';
+        btn.disabled = false;
+      }
+    } catch (e) {
+      btn.textContent = '🗑️ Delete';
+      btn.disabled = false;
+    }
+  }
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   initDocsContext();

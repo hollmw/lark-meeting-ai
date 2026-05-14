@@ -1,15 +1,15 @@
 """
 Meeting AI — System Tray
 ─────────────────────────
-Keeps the backend server running silently.
-Lark is the frontend — this just lives in the tray.
+Keeps the backend server running silently in the background.
+Lark is the frontend — open the gadget there to record and view settings.
+Right-click the tray icon → Quit to exit.
 """
 
 import os
 import sys
 import threading
 import time
-import webbrowser
 from pathlib import Path
 
 # ── Frozen-exe path setup ─────────────────────────────────────────────────────
@@ -28,9 +28,6 @@ import pystray
 from PIL import Image, ImageDraw
 import uvicorn
 
-BACKEND = 'http://127.0.0.1:8000'
-
-
 # ── Icon ──────────────────────────────────────────────────────────────────────
 
 def _make_icon() -> Image.Image:
@@ -46,9 +43,6 @@ def _make_icon() -> Image.Image:
 
 
 # ── Menu actions ──────────────────────────────────────────────────────────────
-
-def on_open(*_):
-    webbrowser.open(BACKEND)
 
 def on_quit(icon, *_):
     icon.stop()
@@ -71,10 +65,9 @@ def main():
     icon = pystray.Icon(
         name='MeetingAI',
         icon=_make_icon(),
-        title='Meeting AI',
+        title='Meeting AI — running',
         menu=pystray.Menu(
-            pystray.MenuItem('Open in browser', on_open),
-            pystray.MenuItem('Quit', on_quit),
+            pystray.MenuItem('Quit Meeting AI', on_quit),
         ),
     )
     icon.run()
