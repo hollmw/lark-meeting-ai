@@ -8,12 +8,12 @@ echo First build takes 10-20 minutes (large ML dependencies).
 echo.
 
 set "SCRIPT_DIR=%~dp0"
-set "VENV=%SCRIPT_DIR%.venv\Scripts"
+set "VENV=%SCRIPT_DIR%venv\Scripts"
 
 :: Verify venv exists
 if not exist "%VENV%\python.exe" (
     echo ERROR: No virtual environment found at .venv\
-    echo Run:  python -m venv .venv  then pip install -r requirements.txt
+    echo Run:  python -m venv venv  then pip install -r requirements.txt
     pause & exit /b 1
 )
 

@@ -52,15 +52,42 @@ def on_quit(icon, *_):
 # ── Server ────────────────────────────────────────────────────────────────────
 
 def _start_server():
-    uvicorn.run('app:app', host='127.0.0.1', port=8000,
-                reload=False, log_level='warning')
+    import traceback
+    log_path = _BASE_DIR / 'meeting_ai.log'
+    try:
+        from app import app as fastapi_app
+        uvicorn.run(fastapi_app, host='127.0.0.1', port=8000,
+                    reload=False, log_level='warning')
+    except Exception as e:
+        with open(log_path, 'a') as f:
+            f.write(f'\n--- SERVER CRASH ---\n')
+            traceback.print_exc(file=f)
+            f.write(str(e) + '\n')
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+def _start_ngrok():
+    """Starts ngrok tunnel on port 8000 silently in the background."""
+    import subprocess
+    try:
+        subprocess.Popen(
+            ['ngrok', 'http', '8000', '--domain=average-chain-bribe.ngrok-free.dev', '--log=false'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=0x08000000,  # CREATE_NO_WINDOW
+        )
+    except FileNotFoundError:
+        pass  # ngrok not installed — skip silently
+
+
 def main():
+    log_path = _BASE_DIR / 'meeting_ai.log'
+    sys.stdout = open(log_path, 'a', buffering=1)
+    sys.stderr = sys.stdout
     threading.Thread(target=_start_server, daemon=True).start()
     time.sleep(2)
+    _start_ngrok()
 
     icon = pystray.Icon(
         name='MeetingAI',

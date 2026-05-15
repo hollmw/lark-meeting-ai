@@ -9,14 +9,7 @@ import time
 import httpx
 import yaml
 from pathlib import Path
-
-
-# ── Load config ──────────────────────────────────────────────────────────────
-
-def load_config():
-    config_path = Path(__file__).parent.parent / "config.yaml"
-    with open(config_path) as f:
-        return yaml.safe_load(f)
+from pipeline._config import load_config
 
 
 CONFIG = load_config()
