@@ -14,8 +14,7 @@ Output is a merged transcript where every segment has:
 """
 
 import warnings
-import yaml
-from pathlib import Path
+from pipeline._config import load_config
 
 # Suppress noisy torchcodec/pyannote warnings — these are non-fatal
 warnings.filterwarnings("ignore", message="torchcodec is not installed correctly")
@@ -23,11 +22,6 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pyannote")
 
 
 # ── Load config ───────────────────────────────────────────────────────────────
-
-def load_config():
-    config_path = Path(__file__).parent.parent / "config.yaml"
-    with open(config_path) as f:
-        return yaml.safe_load(f)
 
 CONFIG = load_config()
 PYANNOTE_CONFIG = CONFIG.get("models", {}).get("pyannote", {})

@@ -10,16 +10,10 @@ Key features:
 """
 
 import whisper
-import yaml
-from pathlib import Path
+from pipeline._config import load_config
 
 
 # ── Load config ───────────────────────────────────────────────────────────────
-
-def load_config():
-    config_path = Path(__file__).parent.parent / "config.yaml"
-    with open(config_path) as f:
-        return yaml.safe_load(f)
 
 CONFIG = load_config()
 WHISPER_CONFIG = CONFIG.get("models", {}).get("whisper", {})

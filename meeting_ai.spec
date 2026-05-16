@@ -12,10 +12,12 @@ import sys
 block_cipher = None
 
 # ── Collect data + binaries for complex packages ──────────────────────────────
-whisper_d,   whisper_b,   whisper_h   = collect_all('whisper')
-pyannote_d,  pyannote_b,  pyannote_h  = collect_all('pyannote')
-torch_d,     torch_b,     torch_h     = collect_all('torch')
-torchaudio_d,torchaudio_b,torchaudio_h= collect_all('torchaudio')
+whisper_d,   whisper_b,   whisper_h      = collect_all('whisper')
+pyannote_d,  pyannote_b,  pyannote_h     = collect_all('pyannote')
+torch_d,     torch_b,     torch_h        = collect_all('torch')
+torchaudio_d,torchaudio_b,torchaudio_h  = collect_all('torchaudio')
+lightning_d,    lightning_b,    lightning_h    = collect_all('lightning_fabric')
+speechbrain_d,  speechbrain_b,  speechbrain_h  = collect_all('speechbrain')
 
 # ── ffmpeg binary (required by Whisper) ───────────────────────────────────────
 import shutil, os
@@ -30,6 +32,8 @@ a = Analysis(
         *pyannote_b,
         *torch_b,
         *torchaudio_b,
+        *lightning_b,
+        *speechbrain_b,
         *_ffmpeg_binaries,
     ],
     datas=[
@@ -40,6 +44,8 @@ a = Analysis(
         *pyannote_d,
         *torch_d,
         *torchaudio_d,
+        *lightning_d,
+        *speechbrain_d,
         # lark_app templates / assets (if any)
         ('lark_app', 'lark_app'),
         ('pipeline', 'pipeline'),
@@ -104,6 +110,10 @@ a = Analysis(
         'openai',
         'pycaw',
         'comtypes',
+        *lightning_h,
+        *speechbrain_h,
+        *collect_submodules('lightning_fabric'),
+        *collect_submodules('speechbrain'),
         *collect_submodules('pyannote'),
         *collect_submodules('asteroid_filterbanks'),
     ],

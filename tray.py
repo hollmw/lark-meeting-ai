@@ -83,7 +83,7 @@ def _start_ngrok():
 
 def main():
     log_path = _BASE_DIR / 'meeting_ai.log'
-    sys.stdout = open(log_path, 'a', buffering=1)
+    sys.stdout = open(log_path, 'a', buffering=1, encoding='utf-8')
     sys.stderr = sys.stdout
     threading.Thread(target=_start_server, daemon=True).start()
     time.sleep(2)

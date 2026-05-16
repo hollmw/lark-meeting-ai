@@ -730,7 +730,11 @@
   let pollInterval    = null;
   let detectedDocToken = null;   // set when running inside Lark Docs add-on
 
-  const BACKEND_URL = 'http://127.0.0.1:8000';
+  // If loaded over HTTPS (e.g. via ngrok), use the same origin as backend
+  // so the browser doesn't block mixed-content requests.
+  const BACKEND_URL = (location.protocol === 'https:')
+    ? location.origin
+    : 'http://127.0.0.1:8000';
 
   // ── UI refs ────────────────────────────────────────────────────────────────
   const statusRing    = document.getElementById('statusRing');

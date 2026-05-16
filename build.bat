@@ -22,8 +22,13 @@ echo [1/3] Installing PyInstaller...
 "%VENV%\pip" install pyinstaller --quiet
 if errorlevel 1 ( echo PyInstaller install failed & pause & exit /b 1 )
 
+:: Kill any running instance before cleaning
+echo [2/3] Stopping any running MeetingAI instance...
+taskkill /f /im MeetingAI.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
+
 :: Clean previous build
-echo [2/3] Cleaning previous build...
+echo       Cleaning previous build...
 if exist "%SCRIPT_DIR%dist\MeetingAI" rmdir /s /q "%SCRIPT_DIR%dist\MeetingAI"
 if exist "%SCRIPT_DIR%build"          rmdir /s /q "%SCRIPT_DIR%build"
 
